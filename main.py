@@ -9,7 +9,7 @@ def main():
     root.iconphoto(True, tk.PhotoImage(file="WJ-Icon.png"))
     app = MainWindow(root)
     app.pack(fill=tk.BOTH, expand=True)
-    root.geometry("1000x451")
+    root.geometry("1000x450")
     root.mainloop()
 
 
