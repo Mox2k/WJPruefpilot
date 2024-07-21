@@ -16,24 +16,52 @@ class ExternalDatabase:
         # ... (Verbindung zur Datenbank herstellen)
 
     def get_waagen_by_kunde(self, kundennummer):
-        """Liest alle relevanten Informationen (Waagen, Aufträge, Adressen) für einen bestimmten Kunden."""  # geändert
+        """Liest alle relevanten Informationen (Waagen, Aufträge, Adressen, Aufheizzyklus) für einen bestimmten Kunden."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
                     SELECT 
-                        IFNULL(kdw.kdw_bezeichnung, ''), IFNULL(kdw.kdw_snr, ''), IFNULL(kdw.kdw_ident_nr, ''), IFNULL(adr.adr_name1, ''), IFNULL(kdw.kdw_modell, ''),
-                        IFNULL(kdw.kdw_standort, ''), IFNULL(kdw.kdw_raum, ''), IFNULL(kdw.kdw_luftbewegung, ''), IFNULL(kdw.kdw_unruhe, ''),
-                        IFNULL(kdw.kdw_verschmutzung, ''), IFNULL(kdw.kdw_waegebereich1, ''), IFNULL(kdw.kdw_waegebereich2, ''),
-                        IFNULL(kdw.kdw_waegebereich3, ''), IFNULL(kdw.kdw_waegebereich4, ''), IFNULL(kdw.kdw_teilungswert1, ''),
-                        IFNULL(kdw.kdw_teilungswert2, ''), IFNULL(kdw.kdw_teilungswert3, ''), IFNULL(kdw.kdw_teilungswert4, ''),
-                        IFNULL(kdw.kdw_feuchte_min, ''), IFNULL(kdw.kdw_feuchte_max, ''), IFNULL(kdw.kdw_dakks_intervall, ''),
-                        IFNULL(auf.auf_nummer_bez, ''),  -- Spalten aus 'auftrag' hinzufügen
-                        IFNULL(adr.adr_name2, ''), IFNULL(adr.adr_name3, ''), IFNULL(adr.adr_strasse, ''), IFNULL(adr.adr_plz, ''), IFNULL(adr.adr_ort, '') -- Spalten aus 'adresse' hinzufügen
+                        IFNULL(kdw.kdw_bezeichnung, ''), 
+                        IFNULL(kdw.kdw_snr, ''), 
+                        IFNULL(kdw.kdw_ident_nr, ''), 
+                        IFNULL(hersteller_adr.adr_name1, ''), 
+                        IFNULL(kdw.kdw_modell, ''),
+                        IFNULL(kdw.kdw_standort, ''), 
+                        IFNULL(kdw.kdw_raum, ''), 
+                        IFNULL(kdw.kdw_luftbewegung, ''), 
+                        IFNULL(kdw.kdw_unruhe, ''),
+                        IFNULL(kdw.kdw_verschmutzung, ''), 
+                        IFNULL(kdw.kdw_waegebereich1, ''), 
+                        IFNULL(kdw.kdw_waegebereich2, ''),
+                        IFNULL(kdw.kdw_waegebereich3, ''), 
+                        IFNULL(kdw.kdw_waegebereich4, ''), 
+                        IFNULL(kdw.kdw_teilungswert1, ''),
+                        IFNULL(kdw.kdw_teilungswert2, ''), 
+                        IFNULL(kdw.kdw_teilungswert3, ''), 
+                        IFNULL(kdw.kdw_teilungswert4, ''),
+                        IFNULL(kdw.kdw_feuchte_min, ''), 
+                        IFNULL(kdw.kdw_feuchte_max, ''), 
+                        IFNULL(kdw.kdw_dakks_intervall, ''),
+                        IFNULL(auf.auf_nummer_bez, ''),  
+                        IFNULL(kunde_adr.adr_name1, ''), 
+                        IFNULL(kunde_adr.adr_name2, ''), 
+                        IFNULL(kunde_adr.adr_name3, ''), 
+                        IFNULL(kunde_adr.adr_strasse, ''), 
+                        IFNULL(kunde_adr.adr_plz, ''), 
+                        IFNULL(kunde_adr.adr_ort, ''), 
+                        (
+                            SELECT IFNULL(bdw.bdw_int, '') 
+                            FROM benutzerdefwerte bdw
+                            JOIN benutzerdef bdf ON bdw.bdw_bdf_guid = bdf.bdf_guid
+                            WHERE bdw.bdw_obj_guid = kdw.kdw_guid 
+                              AND bdf.bdf_name = 'Feuchtebestimmer Aufheizzyklus in min'  -- Korrigierte Spalte
+                        ) AS Aufheizzyklus
                     FROM kundenwaage kdw
-                    LEFT JOIN adress adr ON kdw.kdw_hersteller = adr.adr_nummer  -- Bestehenden Join beibehalten
-                    LEFT JOIN auftrag auf ON kdw.kdw_kunde = auf.auf_kunde  -- Neuen Join hinzufügen
+                    LEFT JOIN adress kunde_adr ON kdw.kdw_kunde = kunde_adr.adr_nummer 
+                    LEFT JOIN adress hersteller_adr ON kdw.kdw_hersteller = hersteller_adr.adr_nummer 
+                    LEFT JOIN auftrag auf ON kdw.kdw_kunde = auf.auf_kunde 
                     WHERE kdw.kdw_kunde = ?
                     """,
                     (kundennummer,),

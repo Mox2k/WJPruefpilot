@@ -1,11 +1,12 @@
 import os
 import tkinter as tk
+import subprocess
+
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import font
 from pdf_temp_generator import PDFGeneratorTemp
 from datetime import date
-
 from settings import Settings
 
 
@@ -203,4 +204,12 @@ class DetailTempWindow(tk.Toplevel):
         # #geändert: PDF generieren und speichern
         pdf_generator.generate_pdf(pdf_path)
 
-        messagebox.showinfo("Hinweis", f"Tempjustage-Prüfprotokoll wurde erstellt und als {pdf_filename} gespeichert.")
+        try:
+            if os.name == 'nt':  # Für Windows
+                os.startfile(pdf_path)
+            elif os.name == 'posix':  # Für macOS und Linux
+                subprocess.call(('open', pdf_path))
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Konnte PDF nicht öffnen: {str(e)}")
+
+        #messagebox.showinfo("Hinweis", f"Tempjustage-Prüfprotokoll wurde erstellt und als {pdf_filename} gespeichert.")

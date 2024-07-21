@@ -100,6 +100,19 @@ class Settings:
         else:
             return None
 
+    def get_stamp_path(self):
+        """Liest den Pfad zum Firmenstempel aus der INI-Datei."""
+        filename = self.get_setting('FIRMA', 'stempel', '')
+        if filename:
+            return os.path.join(os.getcwd(), filename)  # Pfad im Programmverzeichnis
+        else:
+            return None
+
+    def set_stamp_path(self, path):
+        """Speichert den Pfad zum Firmenstempel in der INI-Datei."""
+        filename = os.path.basename(path)
+        self.set_setting('FIRMA', 'stempel', filename)
+
     def set_protokoll_path(self, path):
         """Speichert den Pfad für die Protokolle in der INI-Datei."""
         self.set_setting('PATH', 'protokolle', path)

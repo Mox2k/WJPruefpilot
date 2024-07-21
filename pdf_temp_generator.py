@@ -33,10 +33,12 @@ class PDFGeneratorTemp:
         logo_bild = config['FIRMA']['logo']  # Dies sollte 'logo.png' sein
         pruefer_name = config['PRUEFER']['name']
         unterschrift_bild = config['PRUEFER']['unterschrift']
+        stempel_bild = config['FIRMA']['stempel']
 
-        # Initialisiere logo_str und img_str mit leeren Strings
+        # Initialisiere logo_str, img_str und stempel_str mit leeren Strings
         logo_str = ""
         img_str = ""
+        stempel_str = ""
 
         try:
             # Überprüfen Sie, ob die Dateien existieren
@@ -44,6 +46,8 @@ class PDFGeneratorTemp:
                 raise FileNotFoundError(f"Logobild nicht gefunden: {logo_bild}")
             if not os.path.exists(unterschrift_bild):
                 raise FileNotFoundError(f"Unterschriftsbild nicht gefunden: {unterschrift_bild}")
+            if not os.path.exists(stempel_bild):
+                raise FileNotFoundError(f"Stempelbild nicht gefunden: {stempel_bild}")
 
             # Bild öffnen und Größe anpassen (Logo)
             with Image.open(logo_bild) as logo:
@@ -58,7 +62,7 @@ class PDFGeneratorTemp:
                 logo.save(logo_buffered, format="PNG", optimize=True, quality=95)
                 logo_str = base64.b64encode(logo_buffered.getvalue()).decode('utf-8')
 
-            # #geändert: Bild öffnen und Größe anpassen (Unterschrift)
+            # Bild öffnen und Größe anpassen (Unterschrift)
             with Image.open(unterschrift_bild) as img:
                 # Berechne neue Größe unter Beibehaltung des Seitenverhältnisses
                 base_height = 600  # Sie können diesen Wert anpassen
@@ -71,6 +75,19 @@ class PDFGeneratorTemp:
                 img.save(buffered, format="PNG", optimize=True, quality=95)
                 img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
+            # Bild öffnen und Größe anpassen (Stempel)
+            with Image.open(stempel_bild) as stempel:
+                # Berechne neue Größe unter Beibehaltung des Seitenverhältnisses
+                base_width = 800  # Sie können diesen Wert anpassen
+                w_percent = (base_width / float(stempel.size[0]))
+                h_size = int((float(stempel.size[1]) * float(w_percent)))
+                stempel = stempel.resize((base_width, h_size), Image.LANCZOS)
+
+                # Bild im Speicher zwischenspeichern (Stempel)
+                stempel_buffered = io.BytesIO()
+                stempel.save(stempel_buffered, format="PNG", optimize=True, quality=95)
+                stempel_str = base64.b64encode(stempel_buffered.getvalue()).decode('utf-8')
+
         except (FileNotFoundError, OSError) as e:
             print(f"Error loading or processing image: {e}")
 
@@ -81,21 +98,22 @@ class PDFGeneratorTemp:
             'ort': ort,
             'logo_str': logo_str,
             'pruefer_name': pruefer_name,
-            'unterschrift_str': img_str
+            'unterschrift_str': img_str,
+            'stempel_str': stempel_str
         }
 
     def add_waagen_data(self, waage_data):
-        kdw_bezeichnung, kdw_snr, kdw_ident_nr, adr_name1, kdw_modell, kdw_standort, kdw_raum, kdw_luftbewegung, kdw_unruhe, kdw_verschmutzung, \
+        kdw_bezeichnung, kdw_snr, kdw_ident_nr, hersteller_name, kdw_modell, kdw_standort, kdw_raum, kdw_luftbewegung, kdw_unruhe, kdw_verschmutzung, \
             kdw_waegebereich1, kdw_waegebereich2, kdw_waegebereich3, kdw_waegebereich4, kdw_teilungswert1, kdw_teilungswert2, \
-            kdw_teilungswert3, kdw_teilungswert4, kdw_feuchte_min, kdw_feuchte_max, kdw_dakks_intervall, auf_nummer_bez, adr_name2, \
-            adr_name3, adr_strasse, adr_plz, adr_ort = waage_data
+            kdw_teilungswert3, kdw_teilungswert4, kdw_feuchte_min, kdw_feuchte_max, kdw_dakks_intervall, auf_nummer_bez, \
+            kunde_name1, kunde_name2, kunde_name3, kunde_strasse, kunde_plz, kunde_ort, aufheizzyklus = waage_data
 
-        # Erstelle ein Dictionary mit allen Daten
+        # Erstelle ein Dictionary mit allen Daten (angepasst für Hersteller, Kunde und Aufheizzyklus)
         waage_data_dict = {
             'WJ-Nummer': kdw_bezeichnung,
             'S/N': kdw_snr,
             'Inventarnummer': kdw_ident_nr,
-            'Hersteller': adr_name1,
+            'Hersteller': hersteller_name,
             'Modell': kdw_modell,
             'Standort': kdw_standort,
             'Raum': kdw_raum,
@@ -110,11 +128,17 @@ class PDFGeneratorTemp:
             'Teilung2': kdw_teilungswert2,
             'Teilung3': kdw_teilungswert3,
             'Teilung4': kdw_teilungswert4,
-            'Feuchte Min': kdw_feuchte_min,  # rel.% wird in generate_pdf hinzugefügt
-            'Feuchte Max': kdw_feuchte_max,  # rel.% wird in generate_pdf hinzugefügt
-            'DAkkS-Intervall': kdw_dakks_intervall,  # Monate wird in generate_pdf hinzugefügt
+            'Feuchte Min': kdw_feuchte_min,
+            'Feuchte Max': kdw_feuchte_max,
+            'DAkkS-Intervall': kdw_dakks_intervall,
             'Auftragsnummer': auf_nummer_bez,
-            'Adresse': f"{adr_name1} {adr_name2} {adr_name3} {adr_strasse} {adr_plz} {adr_ort}"
+            'Kunde_name1': kunde_name1,
+            'Kunde_name2': kunde_name2,
+            'Kunde_name3': kunde_name3,
+            'Kunde_Strasse': kunde_strasse,
+            'Kunde_plz': kunde_plz,
+            'Kunde_ort': kunde_ort,
+            'Aufheizzyklus': aufheizzyklus
         }
 
         # Filtere die Daten
@@ -225,6 +249,34 @@ class PDFGeneratorTemp:
 
     def generate_pdf(self, filename="report.pdf"):
         calibration_number = self.generate_calibration_number()
+
+        Abweichung1 = round(float(self.data_to_append.get('temp_data', {}).get('ist_temp1', '0')) - float(
+            self.data_to_append.get('temp_data', {}).get('soll_temp1', '0')), 2)
+        Abweichung2 = round(float(self.data_to_append.get('temp_data', {}).get('ist_temp2', '0')) - float(
+            self.data_to_append.get('temp_data', {}).get('soll_temp2', '0')), 2)
+
+
+        if Abweichung1 == 0:
+            Abweichung_Text = "Im Zuge der Kalibrierung wurde keine Abweichung in der Heizkennlinie des Feuchtebestimmers festgestellt."
+            Abweichung_Text_eng = "During the calibration, no deviation was detected in the heating characteristic of the moisture analyzer."
+        else:
+            Abweichung_Text = "Im Zuge der Kalibrierung wurde eine Abweichung in der Heizkennlinie des Feuchtebestimmers festgestellt. Diese Abweichung wurde gemäß den spezifischen Vorgaben des Herstellers korrigiert, um die Genauigkeit der Messungen sicherzustellen."
+            Abweichung_Text_eng = "During the calibration, a deviation in the heating characteristic of the moisture analyzer was detected. This deviation was corrected according to the manufacturer's specific instructions to ensure the accuracy of the measurements."
+
+        Aufheizzyklus = self.data_to_append.get('waage_data', {}).get('Aufheizzyklus', '')
+        if Aufheizzyklus == "None":
+            Aufheizzyklus = 15
+
+        Herstellerabweichung = 5.0
+
+
+        Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '')
+
+        if self.data_to_append.get('waage_data', {}).get('Kunde_name2', '') != "":
+            Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name2',)
+        elif self.data_to_append.get('waage_data', {}).get('Kunde_name3', '') != "":
+            Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name2',) + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name3',)
+
 
         html_template = f"""
         <html>
@@ -431,7 +483,10 @@ class PDFGeneratorTemp:
     </tr>
     <tr>
       <td>Auftraggeber<br><small><i>Customer</i></small></td>
-      <td>XXX<br>XXX<br>XXX<br>XXX</td>
+      <td>{Kunde}<br>
+      {self.data_to_append.get('waage_data', {}).get('Kunde_Strasse', '')}<br>
+      {self.data_to_append.get('waage_data', {}).get('Kunde_plz', '')}<br>
+      {self.data_to_append.get('waage_data', {}).get('Kunde_ort', '')}<br></td>
     </tr>
   </table>
   <table>
@@ -459,7 +514,9 @@ class PDFGeneratorTemp:
     <hr style="margin-top: 20px;" class="solid">
     <table>
       <tr>
-        <td rowspan="2">XXXXXX</td>
+        <td rowspan="2" style="width:40mm;"><img src="data:image/png;base64,{self.data_to_append.get('company_and_inspector_data', {}).get('stempel_str', '')}"
+               alt="Stempel" style="position: absolute; width:120px; height:auto; z-index:-100; margin-top:-20px;"></td>
+        </td>
         <td>Datum<br><small><i>Date</i></small></td>
         <td>Prüfer<br><small><i>Person in charge</i></small></td>
       </tr>
@@ -556,7 +613,7 @@ class PDFGeneratorTemp:
   <table>
     <tr>
       <td style="width:200px;">Aufheizphase:<br><small><i>Heating phase</i></small></td>
-      <td style="width:80px; color:red;">XX min</td>
+      <td style="width:80px;">{Aufheizzyklus} min</td>
       <td>je Aufheizzyklus<br><small><i>per heating cycle</i></small></td>
     </tr>
   </table>
@@ -612,8 +669,8 @@ class PDFGeneratorTemp:
       <td class="border">1</td>
       <td class="border">{self.data_to_append.get('temp_data', {}).get('soll_temp1', '')} °C</td>
       <td class="border">{self.data_to_append.get('temp_data', {}).get('ist_temp1', '')} °C</td>
-      <td class="border">3 °C</td>
-      <td class="border">100 °C</td>
+      <td class="border">{Abweichung1} °C</td>
+      <td class="border">{self.data_to_append.get('temp_data', {}).get('soll_temp1', '')} °C</td>
       <td class="border">5,0 °C</td>
       <td class="border"><span class="check-mark">&#10004;</span></td>
     </tr>
@@ -621,8 +678,8 @@ class PDFGeneratorTemp:
       <td class="border">2</td>
       <td class="border">{self.data_to_append.get('temp_data', {}).get('soll_temp2', '')} °C</td>
       <td class="border">{self.data_to_append.get('temp_data', {}).get('ist_temp2', '')} °C</td>
-      <td class="border">-2 °C</td>
-      <td class="border">160 °C</td>
+      <td class="border">{Abweichung2} °C</td>
+      <td class="border">{self.data_to_append.get('temp_data', {}).get('soll_temp2', '')} °C</td>
       <td class="border">5,0 °C</td>
       <td class="border"><span class="check-mark">&#10004;</span></td>
     </tr>
@@ -630,40 +687,35 @@ class PDFGeneratorTemp:
 
   <p class="check-mark">&#10003; Abweichungen liegen innerhalb der Toleranz.</p>
 
-  <p>Im Zuge der Kalibrierung wurde eine Abweichung in der Heizkennlinie des Feuchtebestimmers festgestellt.
-    Diese Abweichung wurde gemäß den spezifischen Vorgaben des Herstellers korrigiert, um die Genauigkeit der Messungen
-    sicherzustellen.
-    <br><small><i>During the calibration, a deviation in the heating characteristic of the moisture analyzer was
-      detected.
-      This deviation was corrected according to the manufacturer's specific instructions to ensure the accuracy of the
-      measurements.</i></small>
+  <p>{Abweichung_Text}
+    <br><small><i>{Abweichung_Text_eng}</i></small>
   </p>
 
 
   <table>
     <tr>
       <td><sup>1)</sup></td>
-      <td>Die Differenz zwischen der angezeigten Temperatur des Geräts und dem Sollwert vor der Justage.
-        <br><small><i>The difference between the temperature displayed by the device and the target temperature before
+      <td><small>Die Differenz zwischen der angezeigten Temperatur des Geräts und dem Sollwert vor der Justage.
+        <br><i>The difference between the temperature displayed by the device and the target temperature before
           the adjustment.</i></small></td>
     </tr>
     <tr>
       <td><sup>2)</sup></td>
-      <td>Die Temperatur, auf die das Gerät nach der Kalibrierung justiert wurde.
-        <br><small><i>The temperature to which the device was adjusted after calibration.</i></small></td>
+      <td><small>Die Temperatur, auf die das Gerät nach der Kalibrierung justiert wurde.
+        <br><i>The temperature to which the device was adjusted after calibration.</i></small></td>
     </tr>
     <tr>
       <td><sup>3)</sup></td>
-      <td>Herstellertoleranz lt. Spezifikation.
-        <br><small><i>Manufacturer's tolerance according to specification.</i></small></td>
+      <td><small>Herstellertoleranz lt. Spezifikation.
+        <br><i>Manufacturer's tolerance according to specification.</i></small></td>
     </tr>
     <tr>
       <td><sup>4)</sup></td>
-      <td>Bewertungskriterium: | [Abweichung] | ≤ [Toleranz]
-        <br><small><i>Assessment criterion: | [Error] | ≤ [Tolerance]</i></small>
+      <td><small>Bewertungskriterium: | [Abweichung] | ≤ [Toleranz]
+        <br><i>Assessment criterion: | [Error] | ≤ [Tolerance]</i>
         <br>Gibt an, ob die Abweichung innerhalb der zulässigen Toleranz liegt (<span class="check-mark">&#10004;</span>
         = ja, <span class="cross-mark">&#10008;</span> = nein).
-        <br><small><i>Indicates whether the deviation is within the permissible tolerance (<span class="check-mark">&#10004;</span>
+        <br><i>Indicates whether the deviation is within the permissible tolerance (<span class="check-mark">&#10004;</span>
           = yes, <span class="cross-mark">&#10008;</span> = no).</i></small></td>
     </tr>
   </table>
@@ -672,11 +724,11 @@ class PDFGeneratorTemp:
     <img src="data:image/png;base64,{self.data_to_append.get('temp_data', {}).get('chart_str', '')}"
          alt="Temperaturvergleich" class="chart">
   </div>
+  <div>Die roten Pubkte zeigen die tatsächlich gemessenen Temperaturen vor der Justage, die grünen Punkte zeigen die Temperaturen auf die justiert wurde.
+  Der Abstand zwischen roter und grüner Linie kann als Indikator zur Abschätzung der Genauigkeit des Gerätes dienen.
+  <br><small><i>The red points show the actually measured temperatures before adjustment, the green points show the temperatures to which the device was adjusted.
+The distance between the red and green lines can serve as an indicator for estimating the accuracy of the device.</i></small></div>
 </div>
-
-
-<!--##############################-->
-
 
 </body>
         </html>

@@ -53,7 +53,6 @@ class SettingsWindow(tk.Toplevel):
         # Button zum Auswählen des Protokoll-Pfads
         tk.Button(self, text="Durchsuchen...", command=self.browse_protokoll_directory).grid(row=2, column=2, padx=5,
                                                                                              pady=5)
-
         # --- Firmendaten ---
         ttk.LabelFrame(self, text="Firmendaten").grid(row=3, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
         self.create_labeled_entry(4, "Firma:", 'FIRMA', 'firma')
@@ -72,15 +71,26 @@ class SettingsWindow(tk.Toplevel):
         if logo_path and os.path.exists(logo_path):
             self.load_logo(logo_path)
 
+        # --- Stempel hochladen ---
+        tk.Label(self, text="Stempel:").grid(row=10, column=0, padx=5, pady=5, sticky="w")
+        tk.Button(self, text="Bild auswählen", command=self.upload_stamp).grid(row=10, column=1, padx=5, pady=5)
+        self.stamp_label = tk.Label(self)  # Label für die Anzeige des Stempels
+        self.stamp_label.grid(row=11, column=0, columnspan=3, padx=5, pady=5)
+
+        # Stempel laden und anzeigen, wenn vorhanden
+        stamp_path = self.settings.get_stamp_path()
+        if stamp_path and os.path.exists(stamp_path):
+            self.load_stamp(stamp_path)
+
         # --- Prüfer ---
-        ttk.LabelFrame(self, text="Prüfer").grid(row=10, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
-        self.create_labeled_entry(11, "Prüfer:", 'PRUEFER', 'name')
+        ttk.LabelFrame(self, text="Prüfer").grid(row=12, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        self.create_labeled_entry(13, "Prüfer:", 'PRUEFER', 'name')
 
         # --- Unterschrift hochladen ---
-        tk.Label(self, text="Unterschrift:").grid(row=12, column=0, padx=5, pady=5, sticky="w")
-        tk.Button(self, text="Bild auswählen", command=self.upload_signature).grid(row=12, column=1, padx=5, pady=5)
+        tk.Label(self, text="Unterschrift:").grid(row=14, column=0, padx=5, pady=5, sticky="w")
+        tk.Button(self, text="Bild auswählen", command=self.upload_signature).grid(row=14, column=1, padx=5, pady=5)
         self.signature_label = tk.Label(self)  # Label für die Anzeige der Unterschrift
-        self.signature_label.grid(row=13, column=0, columnspan=3, padx=5, pady=5)
+        self.signature_label.grid(row=15, column=0, columnspan=3, padx=5, pady=5)
 
         # Unterschrift laden und anzeigen, wenn vorhanden
         signature_path = self.settings.get_signature_path()
@@ -88,16 +98,16 @@ class SettingsWindow(tk.Toplevel):
             self.load_signature(signature_path)
 
         # --- Messgeräte ---
-        ttk.LabelFrame(self, text="Messgeräte").grid(row=14, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        ttk.LabelFrame(self, text="Messgeräte").grid(row=16, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
 
         # Bereich für Temperaturmessgeräte
         self.temp_frame = ttk.LabelFrame(self, text="Temperaturmessgeräte")
-        self.temp_frame.grid(row=15, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        self.temp_frame.grid(row=17, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
         self.temp_entries = []  # Liste zur Speicherung der Eingabefelder
 
         # Bereich für VDE-Messgeräte
         self.vde_frame = ttk.LabelFrame(self, text="VDE-Messgeräte")
-        self.vde_frame.grid(row=16, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        self.vde_frame.grid(row=18, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
         self.vde_entries = []  # Liste zur Speicherung der Eingabefelder
 
         # Buttons zum Hinzufügen weiterer Messgeräte
@@ -174,6 +184,33 @@ class SettingsWindow(tk.Toplevel):
         photo = ImageTk.PhotoImage(img)
         self.logo_label.config(image=photo)
         self.logo_label.image = photo
+
+    def upload_stamp(self):
+        """Lädt den Stempel hoch und zeigt ihn an."""
+        filepath = filedialog.askopenfilename(
+            initialdir="/",
+            title="Stempel auswählen",
+            filetypes=(("Bilddateien", "*.png *.jpg *.jpeg"), ("alle Dateien", "*.*"))
+        )
+        if not filepath:
+            return  # Abbrechen, wenn kein Bild ausgewählt wurde
+
+        # Bild kopieren und Pfad in settings.ini speichern
+        filename = os.path.basename(filepath)
+        new_filepath = os.path.join(os.getcwd(), filename)
+        shutil.copy2(filepath, new_filepath)
+        self.settings.set_setting('FIRMA', 'stempel', filename)
+
+        # Bild anzeigen
+        self.load_stamp(new_filepath)
+
+    def load_stamp(self, filepath):
+        """Lädt den Stempel aus dem angegebenen Pfad und zeigt ihn an."""
+        img = Image.open(filepath)
+        img.thumbnail((200, 200))  # Größe anpassen (optional)
+        photo = ImageTk.PhotoImage(img)
+        self.stamp_label.config(image=photo)
+        self.stamp_label.image = photo
 
     def upload_signature(self):
         """Lädt die Unterschrift hoch und zeigt sie an."""
