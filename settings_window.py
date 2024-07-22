@@ -1,9 +1,10 @@
+import os
 import shutil
 import tkinter as tk
-from tkinter import ttk
+
+from tkinter import ttk, messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import os
 
 
 class SettingsWindow(tk.Toplevel):
@@ -14,7 +15,7 @@ class SettingsWindow(tk.Toplevel):
         self.settings = settings
         self.title("Einstellungen")
         self.create_widgets()
-        self.resizable(False, False)  # Größenänderung deaktivieren
+        self.resizable(False, False)
 
     def create_widgets(self):
         """Erstellt die Widgets des Einstellungsfensters."""
@@ -33,10 +34,9 @@ class SettingsWindow(tk.Toplevel):
         self.pfad_entry.insert(0, initial_directory)
 
         # Label und Combobox für Datenbankauswahl
-        tk.Label(self, text="SimplyCal-DB:").grid(row=1, column=0, padx=5, pady=5,
-                                                  sticky="w")  # Sticky west (linksbündig)
+        tk.Label(self, text="SimplyCal-DB:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.database_combobox = ttk.Combobox(self, state="readonly")
-        self.database_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")  # Sticky east-west (volle Breite)
+        self.database_combobox.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
         # Datenbanken laden und anzeigen
         self.update_database_combobox()
@@ -53,12 +53,13 @@ class SettingsWindow(tk.Toplevel):
         # Button zum Auswählen des Protokoll-Pfads
         tk.Button(self, text="Durchsuchen...", command=self.browse_protokoll_directory).grid(row=2, column=2, padx=5,
                                                                                              pady=5)
+
         # --- Firmendaten ---
         ttk.LabelFrame(self, text="Firmendaten").grid(row=3, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
-        self.create_labeled_entry(4, "Firma:", 'FIRMA', 'firma')
-        self.create_labeled_entry(5, "Straße:", 'FIRMA', 'strasse')
-        self.create_labeled_entry(6, "PLZ:", 'FIRMA', 'plz')
-        self.create_labeled_entry(7, "Ort:", 'FIRMA', 'ort')
+        self.firma_entry = self.create_labeled_entry(4, "Firma:", 'FIRMA', 'firma')
+        self.strasse_entry = self.create_labeled_entry(5, "Straße:", 'FIRMA', 'strasse')
+        self.plz_entry = self.create_labeled_entry(6, "PLZ:", 'FIRMA', 'plz')
+        self.ort_entry = self.create_labeled_entry(7, "Ort:", 'FIRMA', 'ort')
 
         # --- Firmenlogo hochladen ---
         tk.Label(self, text="Firmenlogo:").grid(row=8, column=0, padx=5, pady=5, sticky="w")
@@ -84,12 +85,12 @@ class SettingsWindow(tk.Toplevel):
 
         # --- Prüfer ---
         ttk.LabelFrame(self, text="Prüfer").grid(row=12, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
-        self.create_labeled_entry(13, "Prüfer:", 'PRUEFER', 'name')
+        self.pruefer_entry = self.create_labeled_entry(13, "Prüfer:", 'PRUEFER', 'name')
 
         # --- Unterschrift hochladen ---
         tk.Label(self, text="Unterschrift:").grid(row=14, column=0, padx=5, pady=5, sticky="w")
         tk.Button(self, text="Bild auswählen", command=self.upload_signature).grid(row=14, column=1, padx=5, pady=5)
-        self.signature_label = tk.Label(self)  # Label für die Anzeige der Unterschrift
+        self.signature_label = tk.Label(self)
         self.signature_label.grid(row=15, column=0, columnspan=3, padx=5, pady=5)
 
         # Unterschrift laden und anzeigen, wenn vorhanden
@@ -121,10 +122,10 @@ class SettingsWindow(tk.Toplevel):
         # Messgeräte aus den Einstellungen laden und anzeigen
         self.load_messgeraete()
 
-        # Neuer Button zum Speichern aller Einstellungen
+        # Button zum Speichern der Einstellungen
         tk.Button(self, text="Einstellungen speichern", command=self.save_all_settings).grid(row=31, column=0,
                                                                                              columnspan=3, padx=5,
-                                                                                             pady=10)  # Platzierung unter den Messgeräten
+                                                                                             pady=10)
 
     def update_database_combobox(self):
         """Aktualisiert die Datenbank-Combobox mit den verfügbaren .sqlite-Dateien."""
@@ -158,78 +159,87 @@ class SettingsWindow(tk.Toplevel):
             self.protokoll_entry.insert(0, directory)
             self.settings.set_protokoll_path(directory)
 
+    def upload_image(self, image_type):
+        """Generische Funktion zum Hochladen und Anzeigen von Bildern."""
+        title_map = {
+            'logo': "Firmenlogo auswählen",
+            'stamp': "Stempel auswählen",
+            'signature': "Unterschrift auswählen"
+        }
+        setting_key_map = {
+            'logo': 'FIRMA.logo',
+            'stamp': 'FIRMA.stempel',
+            'signature': 'PRUEFER.unterschrift'
+        }
+        label_map = {
+            'logo': self.logo_label,
+            'stamp': self.stamp_label,
+            'signature': self.signature_label
+        }
+
+        try:
+            filepath = filedialog.askopenfilename(
+                initialdir="/",
+                title=title_map[image_type],
+                filetypes=(("Bilddateien", "*.png *.jpg *.jpeg"), ("alle Dateien", "*.*"))
+            )
+            if not filepath:
+                return  # Abbrechen, wenn kein Bild ausgewählt wurde
+
+            # Bild kopieren und Pfad in settings.ini speichern
+            filename = os.path.basename(filepath)
+            new_filepath = os.path.join(os.getcwd(), filename)
+            shutil.copy2(filepath, new_filepath)
+
+            section, option = setting_key_map[image_type].split('.')
+            self.settings.set_setting(section, option, filename)
+
+            # Bild anzeigen
+            self.load_image(new_filepath, label_map[image_type])
+
+            messagebox.showinfo("Erfolg", f"{title_map[image_type]} wurde erfolgreich hochgeladen.")
+        except IOError as e:
+            messagebox.showerror("Fehler", f"Fehler beim Hochladen des Bildes: {str(e)}")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Unerwarteter Fehler: {str(e)}")
+
+    def load_image(self, filepath, label):
+        """Lädt ein Bild aus dem angegebenen Pfad und zeigt es im gegebenen Label an."""
+        try:
+            img = Image.open(filepath)
+            img.thumbnail((400, 200))  # Größe anpassen
+            photo = ImageTk.PhotoImage(img)
+            label.config(image=photo)
+            label.image = photo
+        except IOError as e:
+            messagebox.showerror("Fehler", f"Fehler beim Laden des Bildes: {str(e)}")
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Unerwarteter Fehler: {str(e)}")
+
     def upload_logo(self):
-        """Lädt das Firmenlogo hoch und zeigt es an."""
-        filepath = filedialog.askopenfilename(
-            initialdir="/",
-            title="Firmenlogo auswählen",
-            filetypes=(("Bilddateien", "*.png *.jpg *.jpeg"), ("alle Dateien", "*.*"))
-        )
-        if not filepath:
-            return  # Abbrechen, wenn kein Bild ausgewählt wurde
+        self.upload_image('logo')
 
-        # Bild kopieren und Pfad in settings.ini speichern
-        filename = os.path.basename(filepath)
-        new_filepath = os.path.join(os.getcwd(), filename)
-        shutil.copy2(filepath, new_filepath)
-        self.settings.set_setting('FIRMA', 'logo', filename)
+    def upload_stamp(self):
+        self.upload_image('stamp')
 
-        # Bild anzeigen
-        self.load_logo(new_filepath)  # neu hinzugefügt
+    def upload_signature(self):
+        self.upload_image('signature')
 
     def load_logo(self, filepath):
         """Lädt das Firmenlogo aus dem angegebenen Pfad und zeigt es an."""
         img = Image.open(filepath)
-        img.thumbnail((200, 100))  # Größe anpassen (optional)
+        img.thumbnail((200, 100))
         photo = ImageTk.PhotoImage(img)
         self.logo_label.config(image=photo)
         self.logo_label.image = photo
 
-    def upload_stamp(self):
-        """Lädt den Stempel hoch und zeigt ihn an."""
-        filepath = filedialog.askopenfilename(
-            initialdir="/",
-            title="Stempel auswählen",
-            filetypes=(("Bilddateien", "*.png *.jpg *.jpeg"), ("alle Dateien", "*.*"))
-        )
-        if not filepath:
-            return  # Abbrechen, wenn kein Bild ausgewählt wurde
-
-        # Bild kopieren und Pfad in settings.ini speichern
-        filename = os.path.basename(filepath)
-        new_filepath = os.path.join(os.getcwd(), filename)
-        shutil.copy2(filepath, new_filepath)
-        self.settings.set_setting('FIRMA', 'stempel', filename)
-
-        # Bild anzeigen
-        self.load_stamp(new_filepath)
-
     def load_stamp(self, filepath):
         """Lädt den Stempel aus dem angegebenen Pfad und zeigt ihn an."""
         img = Image.open(filepath)
-        img.thumbnail((200, 200))  # Größe anpassen (optional)
+        img.thumbnail((100, 100))
         photo = ImageTk.PhotoImage(img)
         self.stamp_label.config(image=photo)
         self.stamp_label.image = photo
-
-    def upload_signature(self):
-        """Lädt die Unterschrift hoch und zeigt sie an."""
-        filepath = filedialog.askopenfilename(
-            initialdir="/",
-            title="Unterschrift auswählen",
-            filetypes=(("Bilddateien", "*.png *.jpg *.jpeg"), ("alle Dateien", "*.*"))
-        )
-        if not filepath:
-            return  # Abbrechen, wenn kein Bild ausgewählt wurde
-
-        # Bild kopieren und Pfad in settings.ini speichern
-        filename = os.path.basename(filepath)
-        new_filepath = os.path.join(os.getcwd(), filename)
-        shutil.copy2(filepath, new_filepath)  # Bild kopieren (anstelle von verschieben)
-        self.settings.set_setting('PRUEFER', 'unterschrift', filename)
-
-        # Bild anzeigen
-        self.load_signature(new_filepath)
 
     def load_signature(self, filepath):
         """Lädt die Unterschrift aus dem angegebenen Pfad und zeigt sie an."""
@@ -277,11 +287,7 @@ class SettingsWindow(tk.Toplevel):
         entry = tk.Entry(self, width=40)
         entry.grid(row=row, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
         entry.insert(0, self.settings.get_setting(section, option, ''))
-
-        def save_entry_value_on_focus_out(event):
-            self.save_entry_value(section, option, entry.get())
-
-        entry.bind("<FocusOut>", save_entry_value_on_focus_out)
+        return entry  # Rückgabe des Entry-Widgets für späteren Zugriff
 
     def save_entry_value(self, section, option, value):
         """Speichert den Wert eines Entry-Widgets in den Einstellungen."""
@@ -289,34 +295,45 @@ class SettingsWindow(tk.Toplevel):
 
     def save_all_settings(self):
         """Speichert alle Einstellungen auf einmal."""
+        try:
+            # Firmendaten speichern
+            firma = self.firma_entry.get()
+            strasse = self.strasse_entry.get()
+            plz = self.plz_entry.get()
+            ort = self.ort_entry.get()
+            self.settings.set_company_data(firma, strasse, plz, ort)
 
-        # Firmendaten speichern
-        firma = self.settings.get_setting('FIRMA', 'firma', '')
-        strasse = self.settings.get_setting('FIRMA', 'strasse', '')
-        plz = self.settings.get_setting('FIRMA', 'plz', '')
-        ort = self.settings.get_setting('FIRMA', 'ort', '')
-        self.settings.set_company_data(firma, strasse, plz, ort)
+            # Prüferdaten speichern
+            pruefer_name = self.pruefer_entry.get()
+            self.settings.set_pruefer_name(pruefer_name)
 
-        # Prüferdaten speichern
-        pruefer_name = self.settings.get_setting('PRUEFER', 'name', '')
-        self.settings.set_pruefer_name(pruefer_name)
+            # Messgerätedaten speichern
+            messgeraete = {}
+            for i, temp_entry in enumerate(self.temp_entries, start=1):
+                messgeraete[f'Temperaturmessgeraet_{i}'] = temp_entry.get()
+            for i, vde_entry in enumerate(self.vde_entries, start=1):
+                messgeraete[f'VDE-Messgeraet_{i}'] = vde_entry.get()
+            self.settings.set_messgeraete(messgeraete)
 
-        # Messgerätedaten speichern
-        messgeraete = {}
-        for i, temp_entry in enumerate(self.temp_entries, start=1):
-            messgeraete[f'Temperaturmessgeraet_{i}'] = temp_entry.get()
-        for i, vde_entry in enumerate(self.vde_entries, start=1):
-            messgeraete[f'VDE-Messgeraet_{i}'] = vde_entry.get()
-        self.settings.set_messgeraete(messgeraete)
+            # Datenbankpfad speichern
+            directory = self.pfad_entry.get()
+            self.settings.set_setting('PATH', 'directory', directory)
 
-        # Datenbankpfad speichern
-        directory = self.pfad_entry.get()
-        self.settings.set_setting('PATH', 'directory', directory)
+            # Ausgewählte Datenbank speichern
+            selected_db = self.database_combobox.get()
+            self.settings.set_selected_database(selected_db)
 
-        # Ausgewählte Datenbank speichern
-        selected_db = self.database_combobox.get()
-        self.settings.set_selected_database(selected_db)
+            # Protokoll-Pfad speichern
+            protokoll_path = self.protokoll_entry.get()
+            self.settings.set_protokoll_path(protokoll_path)
 
-        # Protokoll-Pfad speichern
-        protokoll_path = self.protokoll_entry.get()
-        self.settings.set_protokoll_path(protokoll_path)
+            # Infomeldung als modales Dialogfenster anzeigen
+            self.attributes('-disabled', True)  # Deaktiviert das Hauptfenster
+            messagebox.showinfo("Erfolg", "Alle Einstellungen wurden erfolgreich gespeichert.", parent=self)
+            self.attributes('-disabled', False)  # Aktiviert das Hauptfenster wieder
+            self.focus_force()  # Setzt den Fokus zurück auf das Settings-Fenster
+        except Exception as e:
+            self.attributes('-disabled', True)  # Deaktiviert das Hauptfenster
+            messagebox.showerror("Fehler", f"Fehler beim Speichern der Einstellungen: {str(e)}", parent=self)
+            self.attributes('-disabled', False)  # Aktiviert das Hauptfenster wieder
+            self.focus_force()  # Setzt den Fokus zurück auf das Settings-Fenster

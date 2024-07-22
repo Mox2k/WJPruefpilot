@@ -5,7 +5,7 @@ import os
 class Settings:
     """Klasse zum Lesen und Schreiben von Einstellungen aus einer INI-Datei."""
 
-    def __init__(self, config_file='settings.ini'):  # Standardname für die INI-Datei
+    def __init__(self, config_file='settings.ini'):
         self.config_file = config_file
         self.config = configparser.ConfigParser()
         self.data = {}
@@ -53,7 +53,6 @@ class Settings:
         self.set_setting('FIRMA', 'plz', plz)
         self.set_setting('FIRMA', 'ort', ort)
 
-    #wird später auf dem PDF ausgegeben
     def get_company_data(self):
         """Liest die Firmendaten aus der INI-Datei."""
         return {
@@ -117,7 +116,6 @@ class Settings:
         """Speichert den Pfad für die Protokolle in der INI-Datei."""
         self.set_setting('PATH', 'protokolle', path)
 
-    # #neu hinzugefügt
     def get_protokoll_path(self):
         """Liest den Pfad für die Protokolle aus der INI-Datei."""
         return self.get_setting('PATH', 'protokolle', os.path.join(os.getcwd(), 'Protokolle'))
