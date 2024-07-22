@@ -23,6 +23,8 @@ class DetailTempWindow(tk.Toplevel):
         self.ist_temp2_entry = None
         self.soll_temp2_entry = None
         self.temp_frame = None
+        self.soll_temp1_var = tk.BooleanVar(value=False)  # Checkbox-Variable für Soll-Temperatur 1
+        self.soll_temp2_var = tk.BooleanVar(value=False)  # Checkbox-Variable für Soll-Temperatur 2
         self.create_widgets()
         self.resizable(False, False)  # Größenänderung deaktivieren
 
@@ -59,7 +61,7 @@ class DetailTempWindow(tk.Toplevel):
         self.ist_temp1_entry.insert(0, "100")  # Eingabefeld mit Wert vorausfüllen
         self.ist_temp1_entry.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
         ttk.Label(self.temp_frame, text="°C", font=explanation_font).grid(row=0, column=2, sticky="w")
-        ttk.Label(self.temp_frame, text="Das ist eine Erklärung", font=explanation_font, foreground="gray").grid(
+        ttk.Label(self.temp_frame, text="Temperatur bei Prüfpunkt 1 - ablesen und anpassen.", font=explanation_font, foreground="gray").grid(
             row=1, column=0, columnspan=3, sticky="w", padx=5, pady=(0, 5))
 
         # Soll-Temperatur 1
@@ -67,9 +69,14 @@ class DetailTempWindow(tk.Toplevel):
         self.soll_temp1_entry = ttk.Entry(self.temp_frame)
         self.soll_temp1_entry.insert(0, "100")  # Eingabefeld mit Wert vorausfüllen
         self.soll_temp1_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
+        self.soll_temp1_entry.config(state="disabled")  # Eingabefeld standardmäßig deaktivieren
         ttk.Label(self.temp_frame, text="°C", font=explanation_font).grid(row=2, column=2, sticky="w")
-        ttk.Label(self.temp_frame, text="Das ist eine Erklärung", font=explanation_font, foreground="gray").grid(
-            row=3, column=0, columnspan=3, sticky="w", padx=5, pady=(0, 5))
+        ttk.Checkbutton(self.temp_frame, text="", variable=self.soll_temp1_var,
+                        command=lambda: self.toggle_entry(self.soll_temp1_entry, self.soll_temp1_var)).grid(row=2,
+                                                                                                            column=3,
+                                                                                                            padx=5)
+        ttk.Label(self.temp_frame, text="Soll-Temperatur von Prüfpunkt 1 anpassen (nur bei Bedarf)", font=explanation_font, foreground="gray").grid(
+            row=3, column=0, columnspan=4, sticky="w", padx=5, pady=(0, 5))
 
         # Ist-Temperatur 2
         ttk.Label(self.temp_frame, text="Ist-Temperatur 2:").grid(row=4, column=0, sticky="w", padx=5, pady=5)
@@ -77,7 +84,7 @@ class DetailTempWindow(tk.Toplevel):
         self.ist_temp2_entry.insert(0, "160")  # Eingabefeld mit Wert vorausfüllen
         self.ist_temp2_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
         ttk.Label(self.temp_frame, text="°C", font=explanation_font).grid(row=4, column=2, sticky="w")
-        ttk.Label(self.temp_frame, text="Das ist eine Erklärung", font=explanation_font, foreground="gray").grid(
+        ttk.Label(self.temp_frame, text="Temperatur bei Prüfpunkt 2 - ablesen und anpassen.", font=explanation_font, foreground="gray").grid(
             row=5, column=0, columnspan=3, sticky="w", padx=5, pady=(0, 5))
 
         # Soll-Temperatur 2
@@ -85,14 +92,19 @@ class DetailTempWindow(tk.Toplevel):
         self.soll_temp2_entry = ttk.Entry(self.temp_frame)
         self.soll_temp2_entry.insert(0, "160")  # Eingabefeld mit Wert vorausfüllen
         self.soll_temp2_entry.grid(row=6, column=1, sticky="ew", padx=5, pady=5)
+        self.soll_temp2_entry.config(state="disabled")  # Eingabefeld standardmäßig deaktivieren
         ttk.Label(self.temp_frame, text="°C", font=explanation_font).grid(row=6, column=2, sticky="w")
-        ttk.Label(self.temp_frame, text="Das ist eine Erklärung", font=explanation_font, foreground="gray").grid(
-            row=7, column=0, columnspan=3, sticky="w", padx=5, pady=(0, 5))
+        ttk.Checkbutton(self.temp_frame, text="", variable=self.soll_temp2_var,
+                        command=lambda: self.toggle_entry(self.soll_temp2_entry, self.soll_temp2_var)).grid(row=6,
+                                                                                                            column=3,
+                                                                                                            padx=5)
+        ttk.Label(self.temp_frame, text="Soll-Temperatur von Prüfpunkt 2 anpassen (nur bei Bedarf)", font=explanation_font, foreground="gray").grid(
+            row=7, column=0, columnspan=4, sticky="w", padx=5, pady=(0, 5))
 
         # Umgebungstemperatur
         ttk.Label(self.temp_frame, text="Umgebungstemperatur:").grid(row=8, column=0, sticky="w", padx=5, pady=5)
         self.umgebung_temp_entry = ttk.Entry(self.temp_frame)
-        self.umgebung_temp_entry.insert(0, "21")  # Standardwert 21°C
+        self.umgebung_temp_entry.insert(0, "21.0")  # Standardwert 21°C
         self.umgebung_temp_entry.grid(row=8, column=1, sticky="ew", padx=5, pady=5)
         ttk.Label(self.temp_frame, text="°C", font=explanation_font).grid(row=8, column=2, sticky="w")
 
@@ -151,6 +163,13 @@ class DetailTempWindow(tk.Toplevel):
                 entry.insert(0, int(new_value))  # Konvertiere in int, um Nachkommastelle zu entfernen
         except ValueError:
             pass  # Ignoriere ungültige Eingaben
+
+    def toggle_entry(self, entry, var):
+        """Aktiviert oder deaktiviert das Eingabefeld basierend auf dem Checkbox-Status."""
+        if var.get():
+            entry.config(state="normal")
+        else:
+            entry.config(state="disabled")
 
     def get_messgeraet_options(self, messgeraet_type):
         """Liest die verfügbaren Messgeräte aus der settings.ini."""

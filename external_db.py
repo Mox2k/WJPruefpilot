@@ -16,7 +16,7 @@ class ExternalDatabase:
         # ... (Verbindung zur Datenbank herstellen)
 
     def get_waagen_by_kunde(self, kundennummer):
-        """Liest alle relevanten Informationen (Waagen, Aufträge, Adressen, Aufheizzyklus) für einen bestimmten Kunden."""
+        """Liest alle relevanten Informationen (Waagen, Aufträge, Adressen, Aufheizzyklus, Temp. Herstellertoleranz) für einen bestimmten Kunden."""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
@@ -56,8 +56,15 @@ class ExternalDatabase:
                             FROM benutzerdefwerte bdw
                             JOIN benutzerdef bdf ON bdw.bdw_bdf_guid = bdf.bdf_guid
                             WHERE bdw.bdw_obj_guid = kdw.kdw_guid 
-                              AND bdf.bdf_name = 'Feuchtebestimmer Aufheizzyklus in min'  -- Korrigierte Spalte
-                        ) AS Aufheizzyklus
+                              AND bdf.bdf_name = 'Feuchtebestimmer Aufheizzyklus in min'
+                        ) AS Aufheizzyklus,
+                        (
+                            SELECT IFNULL(bdw.bdw_dec, '')  
+                            FROM benutzerdefwerte bdw
+                            JOIN benutzerdef bdf ON bdw.bdw_bdf_guid = bdf.bdf_guid
+                            WHERE bdw.bdw_obj_guid = kdw.kdw_guid 
+                              AND bdf.bdf_name = 'Feuchtebestimmer Herstellertoleranz'
+                        ) AS TempHerstellertoleranz 
                     FROM kundenwaage kdw
                     LEFT JOIN adress kunde_adr ON kdw.kdw_kunde = kunde_adr.adr_nummer 
                     LEFT JOIN adress hersteller_adr ON kdw.kdw_hersteller = hersteller_adr.adr_nummer 
