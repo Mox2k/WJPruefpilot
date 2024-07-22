@@ -1,4 +1,5 @@
 import tkinter as tk
+
 from tkinter import ttk
 from detail_temp_window import DetailTempWindow
 from detail_vde_window import DetailVDEWindow

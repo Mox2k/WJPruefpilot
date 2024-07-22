@@ -1,12 +1,13 @@
 import tkinter as tk
+import sqlite3
+import webbrowser
+
 from tkinter import ttk
 from tkinter import messagebox
 from detail_window import DetailWindow
 from settings import Settings
 from settings_window import SettingsWindow
 from external_db import ExternalDatabase
-import sqlite3
-import webbrowser
 
 
 class MainWindow(tk.Frame):
@@ -74,7 +75,8 @@ class MainWindow(tk.Frame):
 
         # Spalten konfigurieren und Sortierung aktivieren
         for col in self.waagen_table["columns"]:
-            self.waagen_table.heading(col, text=col, command=lambda _col=col: self.treeview_sort_column(_col, False))  # Sortierfunktion verknüpfen
+            self.waagen_table.heading(col, text=col, command=lambda _col=col: self.treeview_sort_column(_col,
+                                                                                                        False))  # Sortierfunktion verknüpfen
             self.waagen_table.column(col, width=100, stretch=tk.YES)
 
         # Scrollbars für die Tabelle erstellen

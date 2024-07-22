@@ -1,9 +1,13 @@
+import os
+import subprocess
 import tkinter as tk
+
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import font
 from pdf_vde_generator import PDFGeneratorVDE
 from datetime import date
+from settings import Settings
 
 
 class DetailVDEWindow(tk.Toplevel):
@@ -416,6 +420,7 @@ class DetailVDEWindow(tk.Toplevel):
         """Generiert das VDE-Prüfprotokoll."""
         pdf_generator = PDFGeneratorVDE()
         pdf_generator.add_title("VDE-Prüfprotokoll")
+        pdf_generator.add_company_and_inspector_data()
         pdf_generator.add_waagen_data(self.waage_data)
 
         # Prüfdatum und Bemerkungen hinzufügen
@@ -463,6 +468,25 @@ class DetailVDEWindow(tk.Toplevel):
 
         pdf_generator.add_pruefdatum_bemerkungen(pruefdatum, bemerkungen)
 
+        # Kalibrierscheinnummer generieren
+        calibration_number = pdf_generator.get_calibration_number()
+
+        # Protokoll-Speicherpfad aus den Einstellungen holen
+        settings = Settings()
+        protokoll_path = settings.get_protokoll_path()
+
+        # PDF-Dateiname mit Kalibrierscheinnummer erstellen
+        pdf_filename = f"{calibration_number}.pdf"
+        pdf_path = os.path.join(protokoll_path, pdf_filename)
+
         # PDF generieren und speichern
-        pdf_generator.generate_pdf("vde_protokoll.pdf")
-        messagebox.showinfo("Hinweis", "VDE-Prüfprotokoll wurde erstellt.")
+        pdf_generator.generate_pdf(pdf_path)
+
+        # PDF öffnen (Plattform-spezifisch)
+        try:
+            if os.name == 'nt':
+                os.startfile(pdf_path)
+            elif os.name == 'posix':
+                subprocess.call(('open', pdf_path))
+        except Exception as e:
+            messagebox.showerror("Fehler", f"Konnte PDF nicht öffnen: {str(e)}")

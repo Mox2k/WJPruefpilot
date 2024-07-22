@@ -209,10 +209,10 @@ class DetailTempWindow(tk.Toplevel):
         pdf_generator.add_tempjustage_data(temp_data)
         pdf_generator.add_pruefdatum_bemerkungen(pruefdatum, bemerkungen)
 
-        # #geändert: Kalibrierscheinnummer generieren
+        # Kalibrierscheinnummer generieren
         calibration_number = pdf_generator.get_calibration_number()
 
-        # #neu hinzugefügt: Protokoll-Speicherpfad aus den Einstellungen holen
+        # Protokoll-Speicherpfad aus den Einstellungen holen
         settings = Settings()
         protokoll_path = settings.get_protokoll_path()
 

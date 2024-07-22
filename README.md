@@ -1,18 +1,27 @@
-Prüfpilot
-Prüfpilot ist eine Anwendung, die für die Durchführung von Kalibrierungs- und Testverfahren für Wägeeinrichtungen entwickelt wurde. 
-Sie bietet eine benutzerfreundliche Oberfläche zur Handhabung von Testprotokollen, einschließlich Temperaturkalibrierung und VDE-Prüfung.
 
+## 🛩️ WJPrüfpilot 🛩️
 
-Funktionen
-Verwaltung von Wägeeinrichtungsdaten
-Generierung von Temperaturkalibrierungsprotokollen
-Generierung von VDE-Prüfprotokollen
-Integration mit externen SQLite-Datenbanken (SimplyCal by Häfner Gewichte GmbH)
-Anpassbare Einstellungen für Unternehmensinformationen, Prüferdetails und Messgeräte
+<b>Optimierung von Kalibrierungs- und Prüfprozessen für Wägeeinrichtungen</b>
 
+WJPrüfpilot ist eine spezialisierte Anwendung, die entwickelt wurde, um die Kalibrierungs- und Prüfverfahren für SimplyCal zu erweitern. Die intuitive Benutzeroberfläche ermöglicht eine effiziente Verwaltung von Prüfprotokollen, insbesondere für Temperaturkalibrierung und VDE-Prüfungen.
 
-Support
-Für Support kontaktieren Sie den Betreuer direkt.
+> Hinweis: Prüfpilot lässt sich nahtlos in die SQLite-Datenbank von SimplyCal (Häfner Gewichte GmbH) einhaken.
 
+### ⚙️ Hauptfunktionen
+- Temperaturkalibrierungsprotokolle: Erstellung umfassender Berichte zur Temperaturkalibrierung.
+- VDE-Prüfprotokolle: Optimierte Erstellung von VDE-konformer Prüfdokumentation.
+- Integration externer Datenbanken: Nahtlose Verbindung mit SQLite-Datenbank SimplyCal.
+- Anpassbare Einstellungen: Passen Sie Firmeninformationen, Prüferdetails und Einstellungen für Messgeräte an Ihre spezifischen Anforderungen an.
 
-Vielen Dank, dass Sie Prüfpilot verwenden! Wir hoffen, dass dieses Tool Ihre Kalibrierungs- und Testprozesse für Wägeeinrichtungen verbessert.
+### 🧰 Coming soon
+
+- Zählwaagenprüfung & Stückstreuung
+- Ergebnisse der vorherigen Prüfungen
+- Drucker und angeschlossene Geräte zur VDE-Prüfung 
+
+### 📧 Support
+Bei Fragen oder Unterstützungswünschen wenden Sie sich bitte direkt an den Entwickler.
+
+<a mailto="lennart.joehnk@gmail.com">lennart.joehnk@gmail.com</a>
+
+Wir sind überzeugt, dass es Ihre Arbeitsabläufe bei der Kalibrierung und Prüfung von Wägeeinrichtungen erheblich verbessern wird.
