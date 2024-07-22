@@ -1,10 +1,9 @@
-Prüfpilot
-Prüfpilot ist eine Anwendung, die für die Durchführung von Kalibrierungs- und Testverfahren für Wägeeinrichtungen entwickelt wurde. 
-Sie bietet eine benutzerfreundliche Oberfläche zur Handhabung von Testprotokollen, einschließlich Temperaturkalibrierung und VDE-Prüfung.
+WJPrüfpilot
+WJPrüfpilot ist eine Anwendung, die für die Durchführung von Kalibrierungs- und Testverfahren für Wägeeinrichtungen entwickelt wurde. 
+Sie bietet eine benutzerfreundliche Oberfläche zur Handhabung von Prüfprotokollen, einschließlich Temperaturkalibrierung und VDE-Prüfung.
 
 
 Funktionen
-Verwaltung von Wägeeinrichtungsdaten
 Generierung von Temperaturkalibrierungsprotokollen
 Generierung von VDE-Prüfprotokollen
 Integration mit externen SQLite-Datenbanken (SimplyCal by Häfner Gewichte GmbH)
