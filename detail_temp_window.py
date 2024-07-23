@@ -230,5 +230,3 @@ class DetailTempWindow(tk.Toplevel):
                 subprocess.call(('open', pdf_path))
         except Exception as e:
             messagebox.showerror("Fehler", f"Konnte PDF nicht öffnen: {str(e)}")
-
-        #messagebox.showinfo("Hinweis", f"Tempjustage-Prüfprotokoll wurde erstellt und als {pdf_filename} gespeichert.")
