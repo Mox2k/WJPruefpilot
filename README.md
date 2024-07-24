@@ -15,6 +15,7 @@ WJPrüfpilot ist eine spezialisierte Anwendung, die entwickelt wurde, um die Kal
 
 ### 🧰 Coming soon
 
+- Prüfgewichte Kalibrierung
 - Zählwaagenprüfung & Stückstreuung
 - Ergebnisse der vorherigen Prüfungen
 - Drucker und angeschlossene Geräte zur VDE-Prüfung 
