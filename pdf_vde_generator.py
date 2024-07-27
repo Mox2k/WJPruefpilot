@@ -198,51 +198,264 @@ class PDFGeneratorVDE:
 
         html_template = f"""
         <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {{ font-family: Calibri, sans-serif; font-size: 12px; margin: 0px; }}
-                    h1 {{ font-size: 24px; font-weight: bold; margin-top: 0px; margin-bottom: 0px; }}
-                    h2 {{ font-size: 22px; margin-top: 0px; margin-bottom: 0px; }}
-                    h4 {{ margin-top: 0px; margin-bottom: 0px; }}
-                    p {{ font-size: 14px; }}
-                    .header {{ display: flex; justify-content: space-between; margin: 5px; margin-bottom: 40px }}
-                    .logo {{ width: 200px; }}
-                    .details {{ text-align: left; }}
-                    table {{ border-collapse: collapse; width: 100%; margin-bottom: 10px; font-size: 14px; }}
-                    th, td {{ border: 0px solid #222; padding: 5px; text-align: left; vertical-align: top; }}
-                    .border, .border {{ border: 1px solid #222; }}
-                    th {{ background-color: #f0f0f5; font-weight: bold; }}
-                    .footer {{ display: flex; justify-content: space-between; font-size: 12px; padding: 0 42px 0 42px; }}
-                    .check-mark {{ color: green; font-weight: bold; }}
-                    .cross-mark {{ color: red; font-weight: bold; }}
-                    @media print {{ .pagebreak {{ clear: both; page-break-after: always; }} }}
-                    #footer {{ position: fixed; width: 100%; bottom: 0; left: 0; right: 0; }}
-                    .page-start {{ page-break-after: always; height: 100%; }}
-                    .logo {{ max-width: 100%; width: 150px; height: auto; }}
-                    .signature {{ max-height: 150px; width: 220px; height: auto; }}
-                </style>
-            </head>
-            <body>
-                <!-- Custom HTML footer -->
-                <div id="footer">
-                  <div class="footer">
-                    <div class="logo" style="width:120px;">
-                      <img src="data:image/png;base64,{self.data_to_append.get('company_and_inspector_data', {}).get('logo_str', '')}"
+<head>
+  <meta charset="UTF-8">
+  <style>
+
+    @media print {{ @page {{ size: A4; margin: 1cm 1cm 1cm 1cm; }} }}
+
+    body {{ font-family: Calibri, sans-serif; font-size: 14px; margin: 0px; }}
+
+    h1 {{ font-size: 24px; margin-top: 0px; margin-bottom: 0px; }}
+
+    h2 {{ font-size: 22px; margin-top: 0px; margin-bottom: 0px; }}
+
+    h4 {{ margin-top: 0px; margin-bottom: 0px; }}
+
+    p {{ font-size: 14px; }}
+
+    bold {{ font-weight: bold; }}
+
+    table {{ border-collapse: collapse; width: 100%; margin-bottom: 0px; font-size: 14px; }}
+
+    th, td {{ border: 1px solid; padding: 5px; text-align: left; vertical-align: top; }}
+
+    .border, .border {{ border: 1px solid; }}
+
+    .bordernull {{ border: 0; }}
+
+    th {{ background-color: #f0f0f5; font-weight: bold; }}
+
+    .logo {{ max-width: 100%; width: 180px; height: auto; }}
+
+    .signature {{ max-height: 150px; width: 220px; height: auto; }}
+
+  </style>
+</head>
+<body>
+<div class="border">
+  <table class="border">
+    <tr>
+      <td colspan="6" style="border-right: 0;"><b>Erst- und Wiederholungsprüfung<br>
+        ortsveränderlicher elektrischer Geräte<br>
+        <small>Prüf- und Messprotokoll</small></b></td>
+        <td style="border-left: 0; text-align: right;">
+            <img src="data:image/png;base64,{self.data_to_append.get('company_and_inspector_data', {}).get('logo_str', '')}"
                            alt="Logo" class="logo">
-                    </div>
-                    <div>
-                      <h4>{self.data_to_append.get('company_and_inspector_data', {}).get('firma', '')},
-                        {self.data_to_append.get('company_and_inspector_data', {}).get('strasse', '')},
-                        {self.data_to_append.get('company_and_inspector_data', {}).get('plz', '')}
-                        {self.data_to_append.get('company_and_inspector_data', {}).get('ort', '')}, Germany</h4>
-                      +49 4329 911 94 14, waagen-kalibrieren.de
-                    </div>
-                  </div>
-                </div>
-{calibration_number}                                                         
-            </body>
-        </html>
+        </td>
+    </tr>
+  </table>
+  <table class="border">
+    <tr>
+      <td style="border-right:0; width: 20%;">Nr.</td>
+      <td style="border-left:0; width: 30%;">{calibration_number}</td>
+      <td style="border-right:0; width: 20%;">Kunden-Nr.</td>
+      <td style="border-left:0; width: 30%;">XXX</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td style="width: 50%;">Auftraggeber:<br>
+        <b>{Kunde}<br>
+          {self.data_to_append.get('waage_data', {}).get('Kunde_Strasse', '')}<br>
+          {self.data_to_append.get('waage_data', {}).get('Kunde_plz', '')} {self.data_to_append.get('waage_data', {}).get('Kunde_ort', '')}</b></td>
+      <td style="width: 50%;">Auftragnehmer:<br>
+        <b>{self.data_to_append.get('company_and_inspector_data', {}).get('firma', '')}<br>
+          {self.data_to_append.get('company_and_inspector_data', {}).get('strasse', '')}<br>
+          {self.data_to_append.get('company_and_inspector_data', {}).get('plz', '')} {self.data_to_append.get('company_and_inspector_data', {}).get('ort', '')}</b></td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td>Prüfung nach: DIN VDE 701 DIN VDE 702</td>
+    </tr>
+    <tr>
+      <td>Neugerät Erweiterung Instandsetzung Widerholungsprüfung</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td class="bordernull" colspan="6"><b>Gerätedaten</b></td>
+    </tr>
+    <tr>
+      <td class="bordernull" style="width: 15%;">Herrsteller:</td>
+      <td class="bordernull" style="width: 30%;">{self.data_to_append.get('waage_data', {}).get('Hersteller', '')}</td>
+      <td class="bordernull" style="width: 15%;">Nennspannung:</td>
+      <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('nennspannung', '')} V</td>
+      <td class="bordernull" style="width: 20%;">co Phi: {self.data_to_append.get('vde_data', {}).get('cosphi', '')}</td>
+    </tr>
+    <tr>
+      <td class="bordernull">Typ:</td>
+      <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('Modell', '')}</td>
+      <td class="bordernull">Nennstrom:</td>
+      <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('nennstrom', '')} A</td>
+      <td class="bordernull" style="width: 20%;">Schutzklasse:</td>
+    </tr>
+    <tr>
+      <td class="bordernull">Ser-Nr.:</td>
+      <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('S/N', '')}</td>
+      <td class="bordernull">Nennleistung:</td>
+      <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('nennleistung', '')} W</td>
+      <td class="bordernull" style="width: 20%;">{self.data_to_append.get('vde_data', {}).get('schutzklasse', '')}</td>
+    </tr>
+    <tr>
+      <td class="bordernull">Inv.-Nr.:</td>
+      <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('Inventarnummer', '')}</td>
+      <td class="bordernull">Frequenz:</td>
+      <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('frequenz', '')} Hz</td>
+      <td class="bordernull" style="width: 20%;">O O O</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <th style="text-align: center;">Sichtprüfung</th>
+      <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
+      <th style="text-align: center;"></th>
+      <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
+      <th style="text-align: center;"></th>
+      <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
+    </tr>
+    <tr>
+      <td class="bordernull"><small>Typenschild/ Warnhinweis/ Kennzeichnungen</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Kühlluftöffnungen/ Luftfilter</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Anzeichen von Überlastung/ unsachgemäßem Gebrauch</small></td>
+      <td style="text-align: center;">XX</td>
+    </tr>
+    <tr>
+      <td class="bordernull"><small>Gehäuse/Schutzabdeckungen</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Schalter, Steuer, Einstell- und Sicherheitsvorrichtungen</small>
+      </td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Sicherheitsbeeinträchtigende
+        Verschmutzung/Korrission/Alterung</small></td>
+      <td style="text-align: center;">XX</td>
+    </tr>
+    <tr>
+      <td class="bordernull"><small>Anschlussleitung/stecker, Anschlussklemmen und -adern</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Bemessung der zugänglichen Gerätesicherung</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Mechanische Gefährdung</small></td>
+      <td style="text-align: center;">XX</td>
+    </tr>
+    <tr>
+      <td class="bordernull"><small>Biegeschutz/ Zugentlastung</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Beuteile und Baugruppen</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"><small>Unzulässige Eingriffe und Änderungen</small></td>
+      <td style=" text-align: center;">XX</td>
+    </tr>
+    <tr>
+      <td class="bordernull"><small>Leitungshalterungen, Sicherungshalter, usw.</small></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"></td>
+      <td style="text-align: center;">XX</td>
+      <td class="bordernull"></td>
+      <td style="text-align: center;">XX</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <th style="text-align: center;">Messungen</th>
+      <th style="text-align: center;">Grenzwert</th>
+      <th style="text-align: center;">Messwert</th>
+      <th style="text-align: center;">i.O./n.i.O.</th>
+      <th style="text-align: center;">Bemerkung</th>
+    </tr>
+    <tr>
+      <td style="width: 20%; text-align: right;"><small>Schutzleiterwiderstand (RPE)</small></td>
+      <td style="width: 20%; text-align: right;">RPE</td>
+      <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('rpe', '')}</td>
+      <td style="width: 10%; text-align: center;">IO</td>
+      <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('rpe_bemerkungen', '')}</td>
+    </tr>
+    <tr>
+      <td style="width: 20%; text-align: right;"><small>Isolationswiderstand (RISO)</small></td>
+      <td style="width: 20%; text-align: right;">RISO</td>
+      <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('riso', '')}</td>
+      <td style="width: 10%;text-align: center;">IO</td>
+      <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('riso_bemerkungen', '')}</td>
+    </tr>
+    <tr>
+      <td style="width: 20%; text-align: right;"><small>Schutzleiterstrom (IPE)</small></td>
+      <td style="width: 20%; text-align: right;">IPE</td>
+      <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('ipe', '')}</td>
+      <td style="width: 10%;text-align: center;">IO</td>
+      <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('ipe_bemerkungen', '')}</td>
+    </tr>
+    <tr>
+      <td style="width: 20%; text-align: right;"><small>Berührungsstrom (IB)</small></td>
+      <td style="width: 20%; text-align: right;">IB</td>
+      <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('ib', '')}</td>
+      <td style="width: 10%;text-align: center;">IO</td>
+      <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('ib_bemerkungen', '')}</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <th style="width: 20%;">Funktionsprüfung:</th>
+      <th style="width: 20%; text-align: center;">i.O./n.i.O.</th>
+      <td class="bordernull"></td>
+    </tr>
+    <tr>
+      <td style="width: 10%;">Funktion des Gerätes</td>
+      <td style="width: 10%; text-align: center;">XX</td>
+      <td class="bordernull"></td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td style="width: 20%;">Verwendetes Messgerät:</td>
+      <td style="width: 80%;">{self.data_to_append.get('vde_data', {}).get('vde_messgeraet', '')}</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td style="width: 50%; height: 2.5cm;">Mängel/Bemerkungen:<br>
+        {self.data_to_append.get('bemerkungen', '')}
+      </td>
+      <td class="bordernull" style="width: 35%;">Das elektrische Gerät entspricht den anerkannten
+        Regeln der Elektrotechnik. Ein sicherer Gebrauch bei
+        bestimmungsgemäßer Anwendung ist gewährleistet
+      </td>
+      <td class="bordernull" style="text-align: center; vertical-align: middle; width: 15%">XX</td>
+    </tr>
+  </table>
+
+  <table class="border">
+    <tr>
+      <td class="bordernull" rowspan="3" style="vertical-align: bottom; width: 30%;">Nächster Prüftermin<br>{self.data_to_append.get('datum_in_einem_jahr', '')}
+      </td>
+      <td class="bordernull" style="width: 35%;">Prüfer/In: {self.data_to_append.get('company_and_inspector_data', {}).get('pruefer_name', '')}</td>
+      <td class="bordernull" rowspan="2"><img
+                          src="data:image/png;base64,{self.data_to_append.get('company_and_inspector_data', {}).get('unterschrift_str', '')}"
+                          alt="Unterschrift" class="signature"
+                          style="z-index: -100; position: absolute; margin-top:-30px; margin-left:30px;"></td>
+    </tr>
+    <tr>
+      <td class="bordernull" style="vertical-align: bottom;"></td>
+    </tr>
+    <tr>
+      <td class="bordernull">Datum: {self.data_to_append.get('pruefdatum', '')}</td>
+      <td class="bordernull">Unterschrift</td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>
+
         """
 
         # Konvertiere das HTML-Template in ein Unicode-Objekt
