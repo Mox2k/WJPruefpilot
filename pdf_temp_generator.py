@@ -13,7 +13,6 @@ class PDFGeneratorTemp:
 
     def __init__(self):
         self.stored_data = {}
-        # Attribut data_to_append initialisieren
         self.data_to_append = {}
 
     def add_title(self, title):
@@ -298,6 +297,7 @@ class PDFGeneratorTemp:
             <head>
                 <meta charset="UTF-8">
                 <style>
+                    @page {{ size: A4; margin: 2cm; }}
     
                     body {{ font-family: Calibri, sans-serif; font-size: 12px; margin: 0px; }}
     
