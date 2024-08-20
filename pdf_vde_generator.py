@@ -216,24 +216,24 @@ class PDFGeneratorVDE:
         elif self.data_to_append.get('waage_data', {}).get('Kunde_name3', '') != "":
             Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name2', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name3', '')
 
+        #VDE-Prüfung und Prüfungsart als Text
         vde_pruefung = self.data_to_append['vde_data']['vde_pruefung']
 
-        # #geändert: VDE-Prüfung und Prüfungsart als Text
         vde_text = ""
         if vde_pruefung['vde_701']:
-            vde_text = "DIN VDE 701 "
-            if vde_pruefung['pruefungsart']['Neugerät']:
-                vde_text += " - Neugerät"
-            elif vde_pruefung['pruefungsart']['Erweiterung']:
-                vde_text += " - Erweiterung"
-            elif vde_pruefung['pruefungsart']['Instandsetzung']:
-                vde_text += " - Instandsetzung"
+            vde_text = "VDE 701 "
+            if vde_pruefung['pruefungsart'] == 0:
+                vde_text += "Neugerät"
+            elif vde_pruefung['pruefungsart'] == 1:
+                vde_text += "Erweiterung"
+            elif vde_pruefung['pruefungsart'] == 2:
+                vde_text += "Instandsetzung"
         elif vde_pruefung['vde_702']:
-            vde_text = "DIN VDE 702 - Wiederholungsprüfung"
+            vde_text = "VDE 702 Wiederholungsprüfung"
         else:
             vde_text = "Keine VDE-Prüfung ausgewählt"
 
-        #Funktion zur Umwandlung in römische Zahlen
+        #Umwandlung in römische Zahlen
         def to_roman(num):
             roman_numerals = {1: 'I', 2: 'II', 3: 'III'}
             return roman_numerals.get(num, str(num))
@@ -272,6 +272,54 @@ class PDFGeneratorVDE:
         unzulaessige_eingriffe = haken if visuelle_pruefung_daten.get("Unzulässige Eingriffe und Änderungen",
                                                                           0) == 1 else kreuz
 
+        # Erstellung der Grenzwerte basierend auf der Schutzklasse
+        schutzklasse = self.data_to_append['vde_data']['schutzklasse']
+        grenzwerte = {
+            '1': {'rpe': "< 0.3 Ohm", 'riso': "> 1 MOhm", 'ipe': "< 3.5 mA", 'ib': "-"},
+            '2': {'rpe': "-", 'riso': "> 2 MOhm", 'ipe': "-", 'ib': "< 0.5 mA"},
+            '3': {'rpe': "-", 'riso': "> 0.25 MOhm", 'ipe': "-", 'ib': "-"}
+        }.get(schutzklasse, {})
+
+        # Funktion zum Vergleichen der Messwerte mit Grenzwerten
+        def check_value(key, value):
+            if grenzwerte.get(key) == '-' or value == '-':
+                return '-'
+            grenz = float(grenzwerte[key].split()[1])
+            val = float(value)
+            if key in ['rpe', 'ipe', 'ib']:
+                return haken if val <= grenz else kreuz
+            else:  # für 'riso'
+                return haken if val >= grenz else kreuz
+
+        # Erstellung der neuen Variablen für Messgrößen und Prüfergebnis
+        messgroessen = {}
+        pruefergebnis = {}
+        for key, unit in [('rpe', 'Ohm'), ('riso', 'MOhm'), ('ipe', 'mA'), ('ib', 'mA')]:
+            value = self.data_to_append['vde_data'].get(key, '-')
+            if value != '-':
+                prefix = '< ' if key in ['rpe', 'ipe', 'ib'] else '> '
+                messgroessen[key] = f"{prefix}{value} {unit}"
+                pruefergebnis[key] = check_value(key, value)
+            else:
+                messgroessen[key] = '-'
+                pruefergebnis[key] = '-'
+
+            # Funktion des Gerätes i.O. Checkbox-Status abrufen
+            funktion_io = self.data_to_append['vde_data']['elektrische_pruefung_daten'].get('funktion_check_var', 0)
+            funktion_io_symbol = haken if funktion_io == 1 else kreuz
+
+        # Überprüfung der visuellen Prüfung
+        visuelle_pruefung_bestanden = all(
+            val == 1 for val in self.data_to_append['vde_data']['visuelle_pruefung_daten'].values())
+
+        # Überprüfung, ob alle Tests bestanden wurden
+        alle_tests_bestanden = (
+                all(ergebnis == haken for ergebnis in pruefergebnis.values() if ergebnis != '-') and
+                funktion_io_symbol == haken and
+                visuelle_pruefung_bestanden
+        )
+        gesamtergebnis_symbol = haken if alle_tests_bestanden else kreuz
+
         html_template = f"""
         <html><!-- DIN A4 21x29,7 cm -->
             <head>
@@ -304,7 +352,7 @@ class PDFGeneratorVDE:
                 p {{ font-size: 14px; }}
                 bold {{ font-weight: bold; }}
                 table {{ border-collapse: collapse; width: 100%; margin-bottom: 0px; font-size: 12px; }}
-                th, td {{ border-collapse: collapse; border: 1px solid; padding: 3px; text-align: left; vertical-align: top; }}
+                th, td {{ border-collapse: collapse; border: 1px solid; padding: 3px; text-align: left; }}
                 th {{ border-collapse: collapse; background-color: #f0f0f5; font-weight: bold; }}
                 .logo {{ max-width: 100%; width: 180px; height: auto; }}
                 .signature {{ max-height: 150px; width: 220px; height: auto; }}
@@ -460,30 +508,30 @@ class PDFGeneratorVDE:
                         </tr>
                         <tr>
                             <td style="width: 20%; text-align: right;"><small>Schutzleiterwiderstand (RPE)</small></td>
-                            <td style="width: 20%; text-align: right;">RPE</td>
-                            <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('rpe', '')}</td>
-                            <td style="width: 10%; text-align: center;">XX</td>
+                            <td style="width: 20%; text-align: right;">{grenzwerte.get('rpe', '-')}</td>
+                            <td style="width: 20%; text-align: right;">{messgroessen.get('rpe', '-')}</td>
+                            <td style="width: 10%; text-align: center;"><span class="{('haken' if pruefergebnis['rpe'] == haken else 'kreuz') if pruefergebnis['rpe'] != '-' else ''}">{pruefergebnis['rpe']}</span></td>
                             <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('rpe_bemerkungen', '')}</td>
                         </tr>
                         <tr>
                             <td style="width: 20%; text-align: right;"><small>Isolationswiderstand (RISO)</small></td>
-                            <td style="width: 20%; text-align: right;">RISO</td>
-                            <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('riso', '')}</td>
-                            <td style="width: 10%;text-align: center;">XX</td>
+                            <td style="width: 20%; text-align: right;">{grenzwerte.get('riso', '-')}</td>
+                            <td style="width: 20%; text-align: right;">{messgroessen.get('riso', '-')}</td>
+                            <td style="width: 10%;text-align: center;"><span class="{('haken' if pruefergebnis['riso'] == haken else 'kreuz') if pruefergebnis['riso'] != '-' else ''}">{pruefergebnis['riso']}</span></td>
                             <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('riso_bemerkungen', '')}</td>
                         </tr>
                         <tr>
                             <td style="width: 20%; text-align: right;"><small>Schutzleiterstrom (IPE)</small></td>
-                            <td style="width: 20%; text-align: right;">IPE</td>
-                            <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('ipe', '')}</td>
-                            <td style="width: 10%;text-align: center;">XX</td>
+                            <td style="width: 20%; text-align: right;">{grenzwerte.get('ipe', '-')}</td>
+                            <td style="width: 20%; text-align: right;">{messgroessen.get('ipe', '-')}</td>
+                            <td style="width: 10%;text-align: center;"><span class="{('haken' if pruefergebnis['ipe'] == haken else 'kreuz') if pruefergebnis['ipe'] != '-' else ''}">{pruefergebnis['ipe']}</span></td>
                             <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('ipe_bemerkungen', '')}</td>
                         </tr>
                         <tr>
                             <td style="width: 20%; text-align: right;"><small>Berührungsstrom (IB)</small></td>
-                            <td style="width: 20%; text-align: right;">IB</td>
-                            <td style="width: 20%; text-align: right;">{self.data_to_append.get('vde_data', {}).get('ib', '')}</td>
-                            <td style="width: 10%; text-align: center;">XX</td>
+                            <td style="width: 20%; text-align: right;">{grenzwerte.get('ib', '-')}</td>
+                            <td style="width: 20%; text-align: right;">{messgroessen.get('ib', '-')}</td>
+                            <td style="width: 10%; text-align: center;"><span class="{('haken' if pruefergebnis['ib'] == haken else 'kreuz') if pruefergebnis['ib'] != '-' else ''}">{pruefergebnis['ib']}</span></td>
                             <td style="width: 30%;">{self.data_to_append.get('vde_data', {}).get('ib_bemerkungen', '')}</td>
                         </tr>
                     </table>
@@ -496,7 +544,7 @@ class PDFGeneratorVDE:
                         </tr>
                         <tr class="bordernull">
                             <td style="width: 20%;">Funktion des Gerätes</td>
-                            <td style="width: 20%; text-align: center;">XX</td>
+                            <td style="width: 20%; text-align: center;"><span class="{('haken' if funktion_io_symbol == haken else 'kreuz')}">{funktion_io_symbol}</span></td>
                             <td class="bordernull" style="border-top: 0; width: 60%;"></td>
                         </tr>
                     </table>
@@ -518,7 +566,7 @@ class PDFGeneratorVDE:
                             Regeln der Elektrotechnik. Ein sicherer Gebrauch bei
                             bestimmungsgemäßer Anwendung ist gewährleistet
                             </td>
-                            <td class="bordernull" style="text-align: center; vertical-align: middle; width: 15%">XX</td>
+                            <td class="bordernull" style="text-align: center; vertical-align: middle; width: 15%"><span class="{('haken' if gesamtergebnis_symbol == haken else 'kreuz')}">{gesamtergebnis_symbol}</span></td>
                         </tr>
                     </table>
                     

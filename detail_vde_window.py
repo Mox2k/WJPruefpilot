@@ -24,13 +24,8 @@ class DetailVDEWindow(tk.Toplevel):
         self.riso_entry = None
         self.ipe_ib_entry = None
         self.vde_frame = None
-        self.vde_var = tk.IntVar(value=2)  # 0: Keine ausgewählt, 1: VDE 701, 2: VDE 702
-        self.pruefungsart_vars = {
-            'Neugerät': tk.BooleanVar(value=False),
-            'Erweiterung': tk.BooleanVar(value=False),
-            'Instandsetzung': tk.BooleanVar(value=False),
-            'Wiederholungsprüfung': tk.BooleanVar(value=False)
-        }
+        self.vde_var = tk.IntVar(value=2)  # Standardmäßig VDE 702 ausgewählt
+        self.pruefungsart_var = tk.IntVar(value=3)  # Standardmäßig Wiederholungsprüfung
 
         self.create_widgets()
         self.resizable(False, False)
@@ -58,107 +53,92 @@ class DetailVDEWindow(tk.Toplevel):
                                                                                   pady=5)
 
         # ///////// --- VDE-Prüfung --- /////////
-        self.vde_frame = ttk.LabelFrame(self, text="VDE-Prüfung")  # vde_frame vorher definiert
+        self.vde_frame = ttk.LabelFrame(self, text="VDE-Prüfung")
         self.vde_frame.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
-        # --- Elektrische Daten (inklusive Schutzklasse) ---
-        elektrische_daten_frame = ttk.LabelFrame(self.vde_frame, text="Elektrische Daten")  # neu hinzugefügt
-        elektrische_daten_frame.grid(row=0, column=0, columnspan=1, padx=10, pady=10, sticky="nsew")  # neu hinzugefügt
+        # --- Elektrische Daten (inklusive VDE-Prüfungsart und Schutzklasse) ---
+        elektrische_daten_frame = ttk.LabelFrame(self.vde_frame, text="Elektrische Daten")
+        elektrische_daten_frame.grid(row=0, column=0, columnspan=1, padx=10, pady=10, sticky="nsew")
 
-        # Schutzklasse (verschoben in den elektrischen Daten Frame)
-        ttk.Label(elektrische_daten_frame, text="Schutzklasse:").grid(row=0, column=0, sticky="w", padx=5,
-                                                                      pady=5)  # geändert
+        # VDE-Prüfungsart Frame
+        vde_pruefungsart_frame = ttk.LabelFrame(elektrische_daten_frame, text="Prüfungsart")
+        vde_pruefungsart_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        # Frame für Radiobuttons (verschoben in den elektrischen Daten Frame)
-        radio_frame = ttk.Frame(elektrische_daten_frame)  # geändert
-        radio_frame.grid(row=0, column=1, sticky="w")  # Frame in einer Zelle platzieren
+        # VDE-Prüfung
+        ttk.Label(vde_pruefungsart_frame, text="VDE").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        vde_pruefung_frame = ttk.Frame(vde_pruefungsart_frame)
+        vde_pruefung_frame.grid(row=0, column=1, sticky="w")
+
+        ttk.Radiobutton(vde_pruefung_frame, text="701",
+                        variable=self.vde_var, value=1, command=self.update_pruefungsart).pack(side="left", padx=5)
+        ttk.Radiobutton(vde_pruefung_frame, text="702",
+                        variable=self.vde_var, value=2, command=self.update_pruefungsart).pack(side="left", padx=5)
+
+        # Prüfungsart
+        ttk.Label(vde_pruefungsart_frame, text="Prüfungsart:").grid(row=1, column=0, sticky="nw", padx=5, pady=5)
+        pruefungsart_frame = ttk.Frame(vde_pruefungsart_frame)
+        pruefungsart_frame.grid(row=1, column=1, sticky="w")
+
+        self.neugeraet_rb = ttk.Radiobutton(pruefungsart_frame, text="Neugerät", variable=self.pruefungsart_var,
+                                            value=0)
+        self.neugeraet_rb.grid(row=0, column=0, sticky="w", padx=5, pady=2)
+
+        self.erweiterung_rb = ttk.Radiobutton(pruefungsart_frame, text="Erweiterung", variable=self.pruefungsart_var,
+                                              value=1)
+        self.erweiterung_rb.grid(row=0, column=1, sticky="w", padx=5, pady=2)
+
+        self.instandsetzung_rb = ttk.Radiobutton(pruefungsart_frame, text="Instandsetzung",
+                                                 variable=self.pruefungsart_var, value=2)
+        self.instandsetzung_rb.grid(row=1, column=0, sticky="w", padx=5, pady=2)
+
+        self.wiederholungspruefung_rb = ttk.Radiobutton(pruefungsart_frame, text="Wiederholungsprüfung",
+                                                        variable=self.pruefungsart_var, value=3)
+        self.wiederholungspruefung_rb.grid(row=1, column=1, sticky="w", padx=5, pady=2)
+
+        # Schutzklasse
+        ttk.Label(elektrische_daten_frame, text="Schutzklasse:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        radio_frame = ttk.Frame(elektrische_daten_frame)
+        radio_frame.grid(row=1, column=1, sticky="w")
 
         self.schutzklasse_var = tk.StringVar(value="2")  # Schutzklasse II als Standardwert
-        # Radiobuttons im Frame
         ttk.Radiobutton(radio_frame, text="I", variable=self.schutzklasse_var, value="1",
-                        command=self.update_input_fields).pack(side="left")  # command hinzugefügt
+                        command=self.update_input_fields).pack(side="left")
         ttk.Radiobutton(radio_frame, text="II", variable=self.schutzklasse_var, value="2",
-                        command=self.update_input_fields).pack(side="left")  # command hinzugefügt
+                        command=self.update_input_fields).pack(side="left")
         ttk.Radiobutton(radio_frame, text="III", variable=self.schutzklasse_var, value="3",
-                        command=self.update_input_fields).pack(side="left")  # command hinzugefügt
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # #geändert: Frame für VDE-Prüfung und Prüfungsart
-        vde_pruefung_frame = ttk.LabelFrame(self.vde_frame, text="VDE-Prüfung")
-        vde_pruefung_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
-
-        ttk.Radiobutton(vde_pruefung_frame, text="DIN VDE 701",
-                        variable=self.vde_var, value=1, command=self.update_pruefungsart).grid(row=0, column=0,
-                                                                                               sticky="w", padx=5,
-                                                                                               pady=5)
-        ttk.Radiobutton(vde_pruefung_frame, text="DIN VDE 702",
-                        variable=self.vde_var, value=2, command=self.update_pruefungsart).grid(row=0, column=1,
-                                                                                               sticky="w", padx=5,
-                                                                                               pady=5)
-
-        pruefungsart_frame = ttk.LabelFrame(vde_pruefung_frame, text="Prüfungsart")
-        pruefungsart_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
-
-        for i, (key, var) in enumerate(self.pruefungsart_vars.items()):
-            cb = ttk.Checkbutton(pruefungsart_frame, text=key, variable=var)
-            cb.grid(row=i // 2, column=i % 2, sticky="w", padx=5, pady=2)
-            setattr(self, f'{key.lower()}_cb', cb)  # Speichern der Checkbox-Referenz
-
-        self.update_pruefungsart()
-
-
-
-
-
-
-
-
-
+                        command=self.update_input_fields).pack(side="left")
 
         # Nennspannung
-        ttk.Label(elektrische_daten_frame, text="Nennspannung (V):").grid(row=1, column=0, sticky="w", padx=5,
-                                                                          pady=5)  # geändert
+        ttk.Label(elektrische_daten_frame, text="Nennspannung (V):").grid(row=2, column=0, sticky="w", padx=5, pady=5)
         self.nennspannung_entry = ttk.Entry(elektrische_daten_frame)
         self.nennspannung_entry.insert(0, "230")  # Standardwert 230V
-        self.nennspannung_entry.grid(row=1, column=1, sticky="ew", padx=5, pady=5)  # geändert
+        self.nennspannung_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)
 
         # Nennstrom
-        ttk.Label(elektrische_daten_frame, text="Nennstrom (A):").grid(row=2, column=0, sticky="w", padx=5,
-                                                                       pady=5)  # geändert
+        ttk.Label(elektrische_daten_frame, text="Nennstrom (A):").grid(row=3, column=0, sticky="w", padx=5, pady=5)
         self.nennstrom_entry = ttk.Entry(elektrische_daten_frame)
         self.nennstrom_entry.insert(0, "-")  # Standardwert -
-        self.nennstrom_entry.grid(row=2, column=1, sticky="ew", padx=5, pady=5)  # geändert
+        self.nennstrom_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)
 
         # Nennleistung
-        ttk.Label(elektrische_daten_frame, text="Nennleistung (W):").grid(row=3, column=0, sticky="w", padx=5,
-                                                                          pady=5)  # geändert
+        ttk.Label(elektrische_daten_frame, text="Nennleistung (W):").grid(row=4, column=0, sticky="w", padx=5, pady=5)
         self.nennleistung_entry = ttk.Entry(elektrische_daten_frame)
         self.nennleistung_entry.insert(0, "-")  # Standardwert -
-        self.nennleistung_entry.grid(row=3, column=1, sticky="ew", padx=5, pady=5)  # geändert
+        self.nennleistung_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)
 
         # Frequenz
-        ttk.Label(elektrische_daten_frame, text="Frequenz (Hz):").grid(row=4, column=0, sticky="w", padx=5,
-                                                                       pady=5)  # geändert
+        ttk.Label(elektrische_daten_frame, text="Frequenz (Hz):").grid(row=5, column=0, sticky="w", padx=5, pady=5)
         self.frequenz_entry = ttk.Entry(elektrische_daten_frame)
         self.frequenz_entry.insert(0, "50")  # Standardwert 50 Hz
-        self.frequenz_entry.grid(row=4, column=1, sticky="ew", padx=5, pady=5)  # geändert
+        self.frequenz_entry.grid(row=5, column=1, sticky="ew", padx=5, pady=5)
 
         # cosPhi
-        ttk.Label(elektrische_daten_frame, text="cosPhi:").grid(row=5, column=0, sticky="w", padx=5, pady=5)  # geändert
+        ttk.Label(elektrische_daten_frame, text="cosPhi:").grid(row=6, column=0, sticky="w", padx=5, pady=5)
         self.cosphi_entry = ttk.Entry(elektrische_daten_frame)
         self.cosphi_entry.insert(0, "1")  # Standardwert 1
-        self.cosphi_entry.grid(row=5, column=1, sticky="ew", padx=5, pady=5)  # geändert
+        self.cosphi_entry.grid(row=6, column=1, sticky="ew", padx=5, pady=5)
+
+        self.update_pruefungsart()
 
         tk.Message(elektrische_daten_frame,
                    text="Schutzleiterwiderstand (RPE): Widerstand zwischen Schutzleiteranschluss und berührbaren Metallteilen.",
@@ -453,32 +433,23 @@ class DetailVDEWindow(tk.Toplevel):
         except ValueError:
             pass  # Bei ungültigen Eingaben (z. B. nicht-numerische Werte) nichts tun
 
+
     def update_pruefungsart(self):
         vde_selection = self.vde_var.get()
 
         if vde_selection == 1:  # VDE 701
-            for key, cb in zip(self.pruefungsart_vars.keys(),
-                               [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]):
-                if key != 'Wiederholungsprüfung':
-                    cb.config(state='normal')
-                    self.pruefungsart_vars[key].set(False)
-                else:
-                    cb.config(state='disabled')
-                    self.pruefungsart_vars[key].set(False)
+            self.neugeraet_rb.config(state="normal")
+            self.erweiterung_rb.config(state="normal")
+            self.instandsetzung_rb.config(state="normal")
+            self.wiederholungspruefung_rb.config(state="disabled")
+            if self.pruefungsart_var.get() == 3:  # Wenn Wiederholungsprüfung ausgewählt war
+                self.pruefungsart_var.set(0)  # Setze auf Neugerät
         elif vde_selection == 2:  # VDE 702
-            for key, cb in zip(self.pruefungsart_vars.keys(),
-                               [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]):
-                if key == 'Wiederholungsprüfung':
-                    cb.config(state='normal')
-                    self.pruefungsart_vars[key].set(True)
-                else:
-                    cb.config(state='disabled')
-                    self.pruefungsart_vars[key].set(False)
-        else:  # Keine VDE ausgewählt
-            for cb in [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]:
-                cb.config(state='disabled')
-                for var in self.pruefungsart_vars.values():
-                    var.set(False)
+            self.neugeraet_rb.config(state="disabled")
+            self.erweiterung_rb.config(state="disabled")
+            self.instandsetzung_rb.config(state="disabled")
+            self.wiederholungspruefung_rb.config(state="normal")
+            self.pruefungsart_var.set(3)  # Setze auf Wiederholungsprüfung
 
     def get_messgeraet_options(self, messgeraet_type):
         """Liest die verfügbaren Messgeräte aus der settings.ini."""
@@ -542,7 +513,7 @@ class DetailVDEWindow(tk.Toplevel):
         vde_pruefung = {
             'vde_701': self.vde_var.get() == 1,
             'vde_702': self.vde_var.get() == 2,
-            'pruefungsart': {k: v.get() for k, v in self.pruefungsart_vars.items()}
+            'pruefungsart': self.pruefungsart_var.get()
         }
 
         pdf_generator.add_vde_pruefung(schutzklasse, rpe, riso, ipe, ib, vde_messgeraet,
