@@ -712,4 +712,3 @@ class PDFGeneratorTemp:
         if pisa_status.err:
             return False
         return True
-

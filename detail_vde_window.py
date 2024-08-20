@@ -24,6 +24,14 @@ class DetailVDEWindow(tk.Toplevel):
         self.riso_entry = None
         self.ipe_ib_entry = None
         self.vde_frame = None
+        self.vde_var = tk.IntVar(value=2)  # 0: Keine ausgewählt, 1: VDE 701, 2: VDE 702
+        self.pruefungsart_vars = {
+            'Neugerät': tk.BooleanVar(value=False),
+            'Erweiterung': tk.BooleanVar(value=False),
+            'Instandsetzung': tk.BooleanVar(value=False),
+            'Wiederholungsprüfung': tk.BooleanVar(value=False)
+        }
+
         self.create_widgets()
         self.resizable(False, False)
 
@@ -73,6 +81,50 @@ class DetailVDEWindow(tk.Toplevel):
                         command=self.update_input_fields).pack(side="left")  # command hinzugefügt
         ttk.Radiobutton(radio_frame, text="III", variable=self.schutzklasse_var, value="3",
                         command=self.update_input_fields).pack(side="left")  # command hinzugefügt
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # #geändert: Frame für VDE-Prüfung und Prüfungsart
+        vde_pruefung_frame = ttk.LabelFrame(self.vde_frame, text="VDE-Prüfung")
+        vde_pruefung_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        ttk.Radiobutton(vde_pruefung_frame, text="DIN VDE 701",
+                        variable=self.vde_var, value=1, command=self.update_pruefungsart).grid(row=0, column=0,
+                                                                                               sticky="w", padx=5,
+                                                                                               pady=5)
+        ttk.Radiobutton(vde_pruefung_frame, text="DIN VDE 702",
+                        variable=self.vde_var, value=2, command=self.update_pruefungsart).grid(row=0, column=1,
+                                                                                               sticky="w", padx=5,
+                                                                                               pady=5)
+
+        pruefungsart_frame = ttk.LabelFrame(vde_pruefung_frame, text="Prüfungsart")
+        pruefungsart_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+
+        for i, (key, var) in enumerate(self.pruefungsart_vars.items()):
+            cb = ttk.Checkbutton(pruefungsart_frame, text=key, variable=var)
+            cb.grid(row=i // 2, column=i % 2, sticky="w", padx=5, pady=2)
+            setattr(self, f'{key.lower()}_cb', cb)  # Speichern der Checkbox-Referenz
+
+        self.update_pruefungsart()
+
+
+
+
+
+
+
+
+
 
         # Nennspannung
         ttk.Label(elektrische_daten_frame, text="Nennspannung (V):").grid(row=1, column=0, sticky="w", padx=5,
@@ -401,6 +453,33 @@ class DetailVDEWindow(tk.Toplevel):
         except ValueError:
             pass  # Bei ungültigen Eingaben (z. B. nicht-numerische Werte) nichts tun
 
+    def update_pruefungsart(self):
+        vde_selection = self.vde_var.get()
+
+        if vde_selection == 1:  # VDE 701
+            for key, cb in zip(self.pruefungsart_vars.keys(),
+                               [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]):
+                if key != 'Wiederholungsprüfung':
+                    cb.config(state='normal')
+                    self.pruefungsart_vars[key].set(False)
+                else:
+                    cb.config(state='disabled')
+                    self.pruefungsart_vars[key].set(False)
+        elif vde_selection == 2:  # VDE 702
+            for key, cb in zip(self.pruefungsart_vars.keys(),
+                               [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]):
+                if key == 'Wiederholungsprüfung':
+                    cb.config(state='normal')
+                    self.pruefungsart_vars[key].set(True)
+                else:
+                    cb.config(state='disabled')
+                    self.pruefungsart_vars[key].set(False)
+        else:  # Keine VDE ausgewählt
+            for cb in [self.neugerät_cb, self.erweiterung_cb, self.instandsetzung_cb, self.wiederholungsprüfung_cb]:
+                cb.config(state='disabled')
+                for var in self.pruefungsart_vars.values():
+                    var.set(False)
+
     def get_messgeraet_options(self, messgeraet_type):
         """Liest die verfügbaren Messgeräte aus der settings.ini."""
         from settings import Settings
@@ -460,11 +539,16 @@ class DetailVDEWindow(tk.Toplevel):
             "funktion_check_var": self.funktion_check_var.get()
         }
 
-        # VDE-Prüfdaten, elektrische Daten und visuelle Prüfdaten hinzufügen
+        vde_pruefung = {
+            'vde_701': self.vde_var.get() == 1,
+            'vde_702': self.vde_var.get() == 2,
+            'pruefungsart': {k: v.get() for k, v in self.pruefungsart_vars.items()}
+        }
+
         pdf_generator.add_vde_pruefung(schutzklasse, rpe, riso, ipe, ib, vde_messgeraet,
                                        nennspannung, nennstrom, nennleistung, frequenz, cosphi, visuelle_pruefung_daten,
                                        rpe_bemerkungen, riso_bemerkungen, ipe_bemerkungen, ib_bemerkungen,
-                                       elektrische_pruefung_daten)
+                                       elektrische_pruefung_daten, vde_pruefung)
 
         pdf_generator.add_pruefdatum_bemerkungen(pruefdatum, bemerkungen)
 

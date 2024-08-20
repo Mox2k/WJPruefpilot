@@ -7,7 +7,6 @@ from xhtml2pdf import pisa
 from datetime import datetime, timedelta
 from PIL import Image
 
-
 class PDFGeneratorVDE:
 
     def __init__(self):
@@ -163,7 +162,7 @@ class PDFGeneratorVDE:
     def add_vde_pruefung(self, schutzklasse, rpe, riso, ipe, ib, vde_messgeraet,
                          nennspannung, nennstrom, nennleistung, frequenz, cosphi, visuelle_pruefung_daten=None,
                          rpe_bemerkungen=None, riso_bemerkungen=None, ipe_bemerkungen=None, ib_bemerkungen=None,
-                         elektrische_pruefung_daten=None):
+                         elektrische_pruefung_daten=None, vde_pruefung=None):
         """Fügt die VDE-Prüfdaten, elektrischen Daten und visuellen Prüfdaten als Tabelle hinzu."""
         self.data_to_append['vde_data'] = {
             'schutzklasse': schutzklasse,
@@ -182,7 +181,8 @@ class PDFGeneratorVDE:
             'ipe_bemerkungen': ipe_bemerkungen,
             'ib_bemerkungen': ib_bemerkungen,
             'visuelle_pruefung_daten': visuelle_pruefung_daten,
-            'elektrische_pruefung_daten': elektrische_pruefung_daten
+            'elektrische_pruefung_daten': elektrische_pruefung_daten,
+            'vde_pruefung': vde_pruefung
         }
 
     def add_pruefdatum_bemerkungen(self, pruefdatum, bemerkungen):
@@ -215,6 +215,62 @@ class PDFGeneratorVDE:
             Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name2', '')
         elif self.data_to_append.get('waage_data', {}).get('Kunde_name3', '') != "":
             Kunde = self.data_to_append.get('waage_data', {}).get('Kunde_name1', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name2', '') + "<br>" + self.data_to_append.get('waage_data', {}).get('Kunde_name3', '')
+
+        vde_pruefung = self.data_to_append['vde_data']['vde_pruefung']
+
+        # #geändert: VDE-Prüfung und Prüfungsart als Text
+        vde_text = ""
+        if vde_pruefung['vde_701']:
+            vde_text = "DIN VDE 701 "
+            if vde_pruefung['pruefungsart']['Neugerät']:
+                vde_text += " - Neugerät"
+            elif vde_pruefung['pruefungsart']['Erweiterung']:
+                vde_text += " - Erweiterung"
+            elif vde_pruefung['pruefungsart']['Instandsetzung']:
+                vde_text += " - Instandsetzung"
+        elif vde_pruefung['vde_702']:
+            vde_text = "DIN VDE 702 - Wiederholungsprüfung"
+        else:
+            vde_text = "Keine VDE-Prüfung ausgewählt"
+
+        #Funktion zur Umwandlung in römische Zahlen
+        def to_roman(num):
+            roman_numerals = {1: 'I', 2: 'II', 3: 'III'}
+            return roman_numerals.get(num, str(num))
+
+        #Schutzklasse in römische Zahlen umwandeln
+        schutzklasse = self.data_to_append['vde_data']['schutzklasse']
+        schutzklasse_roman = to_roman(int(schutzklasse))
+
+
+        #Symbole für Häkchen und Kreuz
+        haken = "&#x2714;"  # Unicode für ein dickeres Häkchen
+        kreuz = "&#x2718;"  # Unicode für ein dickeres Kreuz
+
+        #Visuelle Prüfungsdaten in Variablen packen
+        visuelle_pruefung_daten = self.data_to_append['vde_data']['visuelle_pruefung_daten']
+
+        typenschild = haken if visuelle_pruefung_daten.get("Typenschild/Warnhinweis/Kennzeichnungen",
+                                                           0) == 1 else kreuz
+        gehaeuse = haken if visuelle_pruefung_daten.get("Gehäuse/Schutzabdeckungen", 0) == 1 else kreuz
+        anschlussleitung = haken if visuelle_pruefung_daten.get(
+            "Anschlussleitung/stecker,Anschlussklemmen und -adern", 0) == 1 else kreuz
+        biegeschutz = haken if visuelle_pruefung_daten.get("Biegeschutz/Zugentlastung", 0) == 1 else kreuz
+        leitungshalterungen = haken if visuelle_pruefung_daten.get("Leitungshalterungen, Sicherungshalter, usw.",
+                                                                   0) == 1 else kreuz
+        kuehlluft = haken if visuelle_pruefung_daten.get("Kühlluftöffnungen/Luftfilter", 0) == 1 else kreuz
+        schalter = haken if visuelle_pruefung_daten.get("Schalter, Steuer, Einstell- und Sicherheitsvorrichtungen",
+                                                        0) == 1 else kreuz
+        bemessung = haken if visuelle_pruefung_daten.get("Bemessung der zugänglichen Gerätesicherung",
+                                                         0) == 1 else kreuz
+        bauteile = haken if visuelle_pruefung_daten.get("Beuteile und Baugruppen", 0) == 1 else kreuz
+        ueberlastung = haken if visuelle_pruefung_daten.get("Anzeichen von Überlastung/unsachgemäßem Gebrauch",
+                                                            0) == 1 else kreuz
+        verschmutzung = haken if visuelle_pruefung_daten.get(
+            "Sicherheitsbeeinträchtigende Verschmutzung/Korrission/Alterung", 0) == 1 else kreuz
+        mechanische_gefaehrdung = haken if visuelle_pruefung_daten.get("Mechanische Gefährdung", 0) == 1 else kreuz
+        unzulaessige_eingriffe = haken if visuelle_pruefung_daten.get("Unzulässige Eingriffe und Änderungen",
+                                                                          0) == 1 else kreuz
 
         html_template = f"""
         <html><!-- DIN A4 21x29,7 cm -->
@@ -254,6 +310,8 @@ class PDFGeneratorVDE:
                 .signature {{ max-height: 150px; width: 220px; height: auto; }}
                 .border, .border {{ border-collapse: collapse; border: 1px solid black;}}
                 .bordernull {{ border: 0;}}
+                .haken {{ color: green; font-size: 14px; }}
+                .kreuz {{ color: red; font-size: 14px; }}
             
             </style>
             </head>
@@ -302,10 +360,7 @@ class PDFGeneratorVDE:
 
                     <table class="border">
                         <tr>
-                            <td>Prüfung nach: DIN VDE 701 DIN VDE 702</td>
-                        </tr>
-                        <tr>
-                            <td>Neugerät Erweiterung Instandsetzung Widerholungsprüfung</td>
+                            <td>Prüfung nach: {vde_text}</td>
                         </tr>
                     </table>
 
@@ -325,21 +380,21 @@ class PDFGeneratorVDE:
                             <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('Modell', '')}</td>
                             <td class="bordernull">Nennstrom:</td>
                             <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('nennstrom', '')} A</td>
-                            <td class="bordernull" style="width: 20%;">Schutzklasse:</td>
+                            <td class="bordernull" style="width: 20%;">Schutzklasse: {schutzklasse_roman}</td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull">Ser-Nr.:</td>
                             <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('S/N', '')}</td>
                             <td class="bordernull">Nennleistung:</td>
                             <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('nennleistung', '')} W</td>
-                            <td class="bordernull" style="width: 20%;">{self.data_to_append.get('vde_data', {}).get('schutzklasse', '')}</td>
+                            <td class="bordernull" style="width: 20%;"></td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull">Inv.-Nr.:</td>
                             <td class="bordernull">{self.data_to_append.get('waage_data', {}).get('Inventarnummer', '')}</td>
                             <td class="bordernull">Frequenz:</td>
                             <td class="bordernull">{self.data_to_append.get('vde_data', {}).get('frequenz', '')} Hz</td>
-                            <td class="bordernull" style="width: 20%;">O O O</td>
+                            <td class="bordernull" style="width: 20%;"></td>
                         </tr>
                     </table>
 
@@ -347,51 +402,51 @@ class PDFGeneratorVDE:
                         <tr class="bordernull">
                             <th style="width: 23.333%; text-align: center;">Sichtprüfung</th>
                             <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
-                            <th style="width: 23.333%; text-align: center;"></th>
+                            <th style="width: 23.333%; text-align: center;">Sichtprüfung</th>
                             <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
-                            <th style="width: 23.333%; text-align: center;"></th>
+                            <th style="width: 23.333%; text-align: center;">Sichtprüfung</th>
                             <th style="width: 10%; text-align: center;">i.O./n.i.O.</th>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull" style="border-right: 1; width: 23.333%;"><small>Typenschild/ Warnhinweis/ Kennzeichnungen</small></td>
-                            <td style="border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if typenschild == haken else 'kreuz')}">{typenschild}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Kühlluftöffnungen/ Luftfilter</small></td>
-                            <td style="border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if kuehlluft == haken else 'kreuz')}">{kuehlluft}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Anzeichen von Überlastung/ unsachgemäßem Gebrauch</small></td>
-                            <td style="border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if ueberlastung == haken else 'kreuz')}">{ueberlastung}</span></td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull" style="width: 23.333%;"><small>Gehäuse/Schutzabdeckungen</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if gehaeuse == haken else 'kreuz')}">{gehaeuse}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Schalter, Steuer, Einstell- und Sicherheitsvorrichtungen</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if schalter == haken else 'kreuz')}">{schalter}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Sicherheitsbeeinträchtigende
                             Verschmutzung/Korrission/Alterung</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if verschmutzung == haken else 'kreuz')}">{verschmutzung}</span></td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull" style="width: 23.333%;"><small>Anschlussleitung/stecker, Anschlussklemmen und -adern</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if anschlussleitung == haken else 'kreuz')}">{anschlussleitung}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Bemessung der zugänglichen Gerätesicherung</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if bemessung == haken else 'kreuz')}">{bemessung}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Mechanische Gefährdung</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if mechanische_gefaehrdung == haken else 'kreuz')}">{mechanische_gefaehrdung}</span></td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull" style="width: 23.333%;"><small>Biegeschutz/ Zugentlastung</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if biegeschutz == haken else 'kreuz')}">{biegeschutz}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Beuteile und Baugruppen</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if bauteile == haken else 'kreuz')}">{bauteile}</span></td>
                             <td class="bordernull" style="width: 23.333%;"><small>Unzulässige Eingriffe und Änderungen</small></td>
-                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; border-bottom: 0; width: 10%; text-align: center;"><span class="{('haken' if unzulaessige_eingriffe == haken else 'kreuz')}">{unzulaessige_eingriffe}</span></td>
                         </tr>
                         <tr class="bordernull">
                             <td class="bordernull" style="width: 23.333%;"><small>Leitungshalterungen, Sicherungshalter, usw.</small></td>
-                            <td style="border-top: 0;width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0;width: 10%; text-align: center;"><span class="{('haken' if leitungshalterungen == haken else 'kreuz')}">{leitungshalterungen}</span></td>
                             <td class="bordernull" style="width: 23.333%;"></td>
-                            <td style="border-top: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; width: 10%; text-align: center;"></td>
                             <td class="bordernull" style="width: 23.333%;"></td>
-                            <td style="border-top: 0; width: 10%; text-align: center;">XX</td>
+                            <td style="border-top: 0; width: 10%; text-align: center;"></td>
                         </tr>
                     </table>
 
