@@ -613,7 +613,7 @@ class PDFGeneratorTemp:
                             <th class="border">Prüfpunkt<br><small><i>Test point</i></small></th>
                             <th class="border">Soll-Temp<br><small><i>Target-Temp</i></small></th>
                             <th class="border">Ist-Temp<br><small><i>Actual-Temp</i></small></th>
-                            <th class="border">Abweichung <sup><small>1</small></sup><br><small><i>Deviation<sup><small>1</small></sup></i></small></th>
+                            <th class="border">Abweichung<sup><small>1</small></sup><br><small><i>Deviation<sup><small>1</small></sup></i></small></th>
                             <th class="border">Justiert auf <sup><small>2</small></sup><br><small><i>Adjusted to<sup><small>2</small></sup></i></small></th>
                             <th class="border">Toleranz <sup><small>3</small></sup><br><small><i>Tolerance<sup><small>3</small></sup></i></small></th>
                             <th class="border">Konformität <sup><small>4</small></sup><br><small><i>Conformity<sup><small>4</small></sup></i></small></th>
