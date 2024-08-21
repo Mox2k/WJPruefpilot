@@ -475,7 +475,6 @@ class DetailVDEWindow(tk.Toplevel):
         pdf_generator.add_title("VDE-Prüfprotokoll")
         pdf_generator.add_company_and_inspector_data()
         pdf_generator.add_waagen_data(self.waage_data)
-
         pdf_generator.add_kundennummer(self.kundennummer)
 
         # Prüfdatum und Bemerkungen hinzufügen
