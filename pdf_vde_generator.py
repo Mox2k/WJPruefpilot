@@ -204,6 +204,9 @@ class PDFGeneratorVDE:
         waage_id = self.data_to_append.get('waage_data', {}).get('WJ-Nummer', '')
         return f"VDE_{initials}_{current_date}_{waage_id}"
 
+    def add_kundennummer(self, kundennummer):
+        self.data_to_append['kundennummer'] = kundennummer
+
     def get_calibration_number(self):
         return self.generate_calibration_number()
 
@@ -389,7 +392,7 @@ class PDFGeneratorVDE:
                             <td style="border-right:0; width: 20%;">Nr.</td>
                             <td style="border-left:0; width: 30%;"><b>{calibration_number}</b></td>
                             <td style="border-right:0; width: 20%;">Kunden-Nr.</td>
-                            <td style="border-left:0; width: 30%;">XXX</td>
+                            <td style="border-left:0; width: 30%;">{self.data_to_append.get('kundennummer', 'N/A')}</td>
                         </tr>
                     </table>
 

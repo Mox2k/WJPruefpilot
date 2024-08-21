@@ -17,6 +17,7 @@ class DetailVDEWindow(tk.Toplevel):
         super().__init__(master)
         self.db = db
         self.waage_id = waage_id
+        self.kundennummer = self.extract_kundennummer(waage_id)
         self.waage_data = waage_data  # Daten der ausgewählten Waage speichern
         self.title(f"VDE-Prüfung für Waage {waage_id}")
         self.schutzklasse_var = None
@@ -433,6 +434,8 @@ class DetailVDEWindow(tk.Toplevel):
         except ValueError:
             pass  # Bei ungültigen Eingaben (z. B. nicht-numerische Werte) nichts tun
 
+    def extract_kundennummer(self, waage_id):
+        return waage_id.rsplit('.', 1)[0] if waage_id else ''
 
     def update_pruefungsart(self):
         vde_selection = self.vde_var.get()
@@ -472,6 +475,8 @@ class DetailVDEWindow(tk.Toplevel):
         pdf_generator.add_title("VDE-Prüfprotokoll")
         pdf_generator.add_company_and_inspector_data()
         pdf_generator.add_waagen_data(self.waage_data)
+
+        pdf_generator.add_kundennummer(self.kundennummer)
 
         # Prüfdatum und Bemerkungen hinzufügen
         pruefdatum = self.pruefdatum_entry.get()
