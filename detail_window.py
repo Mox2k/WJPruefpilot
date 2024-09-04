@@ -8,10 +8,11 @@ from detail_vde_window import DetailVDEWindow
 class DetailWindow(tk.Toplevel):
     """Klasse für das Detailfenster einer Waage."""
 
-    def __init__(self, master=None, waage_id=None, waage_data=None):
+    def __init__(self, master=None, waage_id=None, waage_data=None, auftragsnummer=None):
         super().__init__(master)
         self.waage_id = waage_id
         self.waage_data = waage_data
+        self.auftragsnummer = auftragsnummer
         self.title(f"Details für Waage {waage_id}")
         self.create_widgets()
         self.resizable(False, False)
@@ -22,6 +23,7 @@ class DetailWindow(tk.Toplevel):
             master.winfo_x() + (master.winfo_width() - self.winfo_width()) // 2,
             master.winfo_y() + (master.winfo_height() - self.winfo_height()) // 2
         ))
+
 
     def create_widgets(self):
         """Erstellt die Widgets des Detailfensters."""
@@ -47,7 +49,7 @@ class DetailWindow(tk.Toplevel):
         ttk.Button(button_frame, text="VDE-Prüfung", command=self.open_vde_window).pack(fill="both", expand=True)  # Button im Frame, füllt ihn aus
 
     def open_temp_window(self):
-        DetailTempWindow(self, self.waage_id, self.waage_data)
+        DetailTempWindow(self, self.waage_id, self.waage_data, self.auftragsnummer)
 
     def open_vde_window(self):
-        DetailVDEWindow(self, self.waage_id, self.waage_data)
+        DetailVDEWindow(self, self.waage_id, self.waage_data, self.auftragsnummer)

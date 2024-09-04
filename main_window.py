@@ -121,7 +121,8 @@ class MainWindow(tk.Frame):
         """Öffnet das Detailfenster beim Doppelklick auf eine Waage"""
         item = self.waagen_table.selection()[0]  # Ausgewähltes Element
         waage_data = self.waagen_table.item(item, "values")  # Waagendaten abrufen
-        DetailWindow(self.master, waage_data[0], waage_data)  # Alle Waagendaten übergeben
+        auftragsnummer = self.auftrags_dropdown.get().split(" - ")[0]  # Auftragsnummer extrahieren
+        DetailWindow(self.master, waage_data[0], waage_data, auftragsnummer)  # Auftragsnummer übergeben
 
     def treeview_sort_column(self, col, reverse):
         """Sortiert die Treeview nach der angegebenen Spalte, wobei numerische Werte korrekt behandelt werden."""
@@ -162,7 +163,7 @@ class MainWindow(tk.Frame):
         info_window.geometry("250x150")
 
         # Inhalt des Info-Fensters
-        ttk.Label(info_window, text="Versionsnummer: 0.9.1").pack(pady=5)
+        ttk.Label(info_window, text="Versionsnummer: 1.0.0").pack(pady=5)
         ttk.Label(info_window, text="Herausgegeben von: Waagen-Jöhnk KG").pack(pady=5)
         ttk.Label(info_window, text="Kontakt: info@waagen-joehnk.de").pack(pady=5)
         ttk.Label(info_window, text="Webseite:").pack(pady=5)

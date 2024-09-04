@@ -13,12 +13,12 @@ from settings import Settings
 class DetailVDEWindow(tk.Toplevel):
     """Klasse für das Detailfenster einer Waage."""
 
-    def __init__(self, master=None, waage_id=None, waage_data=None, db=None):
+    def __init__(self, master=None, waage_id=None, waage_data=None, auftragsnummer=None):
         super().__init__(master)
-        self.db = db
         self.waage_id = waage_id
         self.kundennummer = self.extract_kundennummer(waage_id)
         self.waage_data = waage_data  # Daten der ausgewählten Waage speichern
+        self.auftragsnummer = auftragsnummer
         self.title(f"VDE-Prüfung für Waage {waage_id}")
         self.schutzklasse_var = None
         self.rpe_entry = None
@@ -30,6 +30,7 @@ class DetailVDEWindow(tk.Toplevel):
 
         self.create_widgets()
         self.resizable(False, False)
+
 
     def create_widgets(self):
         """Erstellt die Widgets des Detailfensters."""
@@ -532,11 +533,15 @@ class DetailVDEWindow(tk.Toplevel):
 
         # Protokoll-Speicherpfad aus den Einstellungen holen
         settings = Settings()
-        protokoll_path = settings.get_protokoll_path()
+        protokoll_base_path = settings.get_protokoll_path()
 
-        # PDF-Dateiname mit Kalibrierscheinnummer erstellen
+        # Unterordner für die Auftragsnummer erstellen
+        auftrag_ordner = os.path.join(protokoll_base_path, self.auftragsnummer)
+        os.makedirs(auftrag_ordner, exist_ok=True)
+
+        # PDF-Dateiname mit Kalibrierscheinnummer erstellen und im Auftrag-Unterordner speichern
         pdf_filename = f"{calibration_number}.pdf"
-        pdf_path = os.path.join(protokoll_path, pdf_filename)
+        pdf_path = os.path.join(auftrag_ordner, pdf_filename)
 
         # PDF generieren und speichern
         pdf_generator.generate_pdf(pdf_path)

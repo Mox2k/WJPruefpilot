@@ -13,10 +13,11 @@ from settings import Settings
 class DetailTempWindow(tk.Toplevel):
     """Klasse für das Detailfenster einer Waage."""
 
-    def __init__(self, master=None, waage_id=None, waage_data=None):
+    def __init__(self, master=None, waage_id=None, waage_data=None, auftragsnummer=None):
         super().__init__(master)
         self.waage_id = waage_id
         self.waage_data = waage_data  # Daten der ausgewählten Waage speichern
+        self.auftragsnummer = auftragsnummer
         self.title(f"Tempreatur-Justage für Waage {waage_id}")
         self.ist_temp1_entry = None  # Eingabefelder als Instanzvariablen initialisieren
         self.soll_temp1_entry = None
@@ -27,6 +28,7 @@ class DetailTempWindow(tk.Toplevel):
         self.soll_temp2_var = tk.BooleanVar(value=False)  # Checkbox-Variable für Soll-Temperatur 2
         self.create_widgets()
         self.resizable(False, False)  # Größenänderung deaktivieren
+
 
     def create_widgets(self):
         """Erstellt die Widgets des Detailfensters."""
@@ -214,13 +216,17 @@ class DetailTempWindow(tk.Toplevel):
 
         # Protokoll-Speicherpfad aus den Einstellungen holen
         settings = Settings()
-        protokoll_path = settings.get_protokoll_path()
+        protokoll_base_path = settings.get_protokoll_path()
 
-        # #geändert: PDF-Dateiname mit Kalibrierscheinnummer erstellen
+        # Unterordner für die Auftragsnummer erstellen
+        auftrag_ordner = os.path.join(protokoll_base_path, self.auftragsnummer)
+        os.makedirs(auftrag_ordner, exist_ok=True)
+
+        # PDF-Dateiname mit Kalibrierscheinnummer erstellen und im Auftrag-Unterordner speichern
         pdf_filename = f"{calibration_number}.pdf"
-        pdf_path = os.path.join(protokoll_path, pdf_filename)
+        pdf_path = os.path.join(auftrag_ordner, pdf_filename)
 
-        # #geändert: PDF generieren und speichern
+        # PDF generieren und speichern
         pdf_generator.generate_pdf(pdf_path)
 
         try:
