@@ -41,7 +41,7 @@ class MainWindow(tk.Frame):
 
         infomenu = tk.Menu(menubar, tearoff=0)
         infomenu.add_command(label="Info", command=self.open_info_window)
-        menubar.add_cascade(label="Hilfe", menu=infomenu)  # geändert
+        menubar.add_cascade(label="Hilfe", menu=infomenu)
 
     def create_widgets(self):
         """Erstellt die Widgets des Hauptfensters."""
@@ -134,7 +134,7 @@ class MainWindow(tk.Frame):
             l = [(self.waagen_table.set(k, col), k) for k in self.waagen_table.get_children('')]
 
         # Sortierung nach dem ersten Element des Tupels (Spaltenwert)
-        l.sort(key=lambda t: t[0], reverse=reverse)  # Korrigierte Sortierung
+        l.sort(key=lambda t: t[0], reverse=reverse)
 
         # Umordnen der Elemente in der Treeview
         for index, (val, k) in enumerate(l):
@@ -156,7 +156,7 @@ class MainWindow(tk.Frame):
 
         settings_window.bind("<Destroy>", update_and_destroy)
 
-    def open_info_window(self):  # neue Methode zum Öffnen des Info-Fensters
+    def open_info_window(self):  # Methode zum Öffnen des Info-Fensters
         """Öffnet das Info-Fenster."""
         info_window = tk.Toplevel(self.master)
         info_window.title("Info")
