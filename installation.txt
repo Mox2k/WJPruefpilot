@@ -1,0 +1,7 @@
+Anwendung generieren (Dev):
+1) pip install pyinstaller
+2) pyinstaller --name=WJPruefpilot --windowed --onefile --additional-hooks-dir=. main.py
+
+WJPruefilot installieren (Anwender):
+1) Datei und WJ-Icon.png herunterladen
+2) In einen gemeinsamen Ordner z.B. C:Programme/WJPruepilot ablegen und ausführen
